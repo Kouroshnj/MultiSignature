@@ -1,10 +1,6 @@
 node_modules
 .env
-
-# js files 
-/scripts
 scripts
-/scripts/
 # Hardhat files
 /cache
 /artifacts
