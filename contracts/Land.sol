@@ -14,13 +14,15 @@ contract Land is ERC721URIStorage {
     event MintToken(uint toeknId, address signer, address owner);
     event TransferToken(address from, address to, uint tokenId);
     event SetEnhancements(address signer, string[] items);
-
+    event ChangeLandLocation(
+        address signer,
+        uint[2] newLocations,
+        uint[2] oldLocations
+    );
 
     constructor() ERC721("MirroraVillage", "MIRV") {
         owner = msg.sender;
     }
-
-
 
     modifier onlyOwner() {
         _onlyOwner();
@@ -41,7 +43,7 @@ contract Land is ERC721URIStorage {
         address payable owner;
         uint regionId;
         uint landId;
-        uint8 landSize;
+        uint64 landSize;
         uint[2] landLocation;
         string[] enhancements;
         uint landPrice;
@@ -70,15 +72,34 @@ contract Land is ERC721URIStorage {
         return tokenIds;
     }
 
-    function transferLandToken(address payable _to, uint _tokenId) external nftOwner(_tokenId) zeroAddress(_to) {
+    function transferLandToken(
+        address payable _to,
+        uint _tokenId
+    ) external nftOwner(_tokenId) zeroAddress(_to) {
         safeTransferFrom(msg.sender, _to, _tokenId);
         LandInformation[_tokenId].owner = _to;
         emit TransferToken(msg.sender, _to, _tokenId);
     }
 
-    function setEnhancement(string[] memory _items, uint _tokenId) external nftOwner(_tokenId) {
+    function setEnhancement(
+        string[] memory _items,
+        uint _tokenId
+    ) external nftOwner(_tokenId) {
         LandInformation[_tokenId].enhancements = _items;
         emit SetEnhancements(msg.sender, _items);
+    }
+
+    function changeLandLocation(
+        uint _tokenId,
+        uint[2] memory _locations
+    ) external onlyOwner {
+        uint[2] memory oldLocations = LandInformation[_tokenId].landLocation;
+        LandInformation[_tokenId].landLocation = _locations;
+        emit ChangeLandLocation(
+            msg.sender,
+            LandInformation[_tokenId].landLocation,
+            oldLocations
+        );
     }
 
     function approveLandToken(address _to, uint _tokenId) external {
@@ -86,14 +107,19 @@ contract Land is ERC721URIStorage {
         emit Approval(msg.sender, _to, _tokenId);
     }
 
-    function getTokenURI(uint _tokenId) public view returns(string memory) {
+    function getTokenURI(uint _tokenId) public view returns (string memory) {
         return tokenURI(_tokenId);
     }
 
-    function getTokenInfo(uint _tokenId) public view returns(LandStructure memory) {
+    function getTokenInfo(
+        uint _tokenId
+    ) public view returns (LandStructure memory) {
         return LandInformation[_tokenId];
     }
 
+    function allMintedTokens() public view returns (uint) {
+        return tokenIds;
+    }
 
     function _onlyOwner() private view {
         require(msg.sender == owner, "You are not owner of contract!");
@@ -104,6 +130,9 @@ contract Land is ERC721URIStorage {
     }
 
     function _nftOwner(uint _tokenId) public view {
-        require(msg.sender == LandInformation[_tokenId].owner, "You are not nft owner!");
+        require(
+            msg.sender == LandInformation[_tokenId].owner,
+            "You are not nft owner!"
+        );
     }
 }
