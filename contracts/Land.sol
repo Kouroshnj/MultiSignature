@@ -16,9 +16,10 @@ contract Land is ERC721URIStorage {
     event SetEnhancements(address signer, string[] items);
     event ChangeLandLocation(
         address signer,
-        uint[2] newLocations,
-        uint[2] oldLocations
+        uint[2] oldLocations,
+        uint[2] newLocations
     );
+    event ChangeLandPrice(address signer, uint oldPrice, uint newPrice);
 
     constructor() ERC721("MirroraVillage", "MIRV") {
         owner = msg.sender;
@@ -43,7 +44,7 @@ contract Land is ERC721URIStorage {
         address payable owner;
         uint regionId;
         uint landId;
-        uint64 landSize;
+        uint8 landSize;
         uint[2] landLocation;
         string[] enhancements;
         uint landPrice;
@@ -91,15 +92,17 @@ contract Land is ERC721URIStorage {
 
     function changeLandLocation(
         uint _tokenId,
-        uint[2] memory _locations
+        uint[2] memory _newlocations
     ) external onlyOwner {
         uint[2] memory oldLocations = LandInformation[_tokenId].landLocation;
-        LandInformation[_tokenId].landLocation = _locations;
-        emit ChangeLandLocation(
-            msg.sender,
-            LandInformation[_tokenId].landLocation,
-            oldLocations
-        );
+        LandInformation[_tokenId].landLocation = _newlocations;
+        emit ChangeLandLocation(msg.sender, oldLocations, _newlocations);
+    }
+
+    function changeLandPrice(uint _tokenId, uint _newPrice) external onlyOwner {
+        uint oldPrice = LandInformation[_tokenId].landPrice;
+        LandInformation[_tokenId].landPrice = _newPrice;
+        emit ChangeLandPrice(msg.sender, oldPrice, _newPrice);
     }
 
     function approveLandToken(address _to, uint _tokenId) external {
