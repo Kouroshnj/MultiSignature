@@ -8,7 +8,6 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 
 contract Land is ERC721URIStorage {
     address public owner;
-    address public marketplaceAddress;
     uint private tokenIds;
 
     event MintToken(uint toeknId, address signer, address owner);
@@ -52,7 +51,7 @@ contract Land is ERC721URIStorage {
 
     mapping(uint => LandStructure) private LandInformation;
 
-    function mintLandNft(
+    function mintLandToken(
         uint _regionId,
         uint8 _landSize,
         uint[2] memory _landLocation,
@@ -74,10 +73,11 @@ contract Land is ERC721URIStorage {
     }
 
     function transferLandToken(
+        address payable _from,
         address payable _to,
         uint _tokenId
-    ) external nftOwner(_tokenId) zeroAddress(_to) {
-        safeTransferFrom(msg.sender, _to, _tokenId);
+    ) external zeroAddress(_to) {
+        safeTransferFrom(_from, _to, _tokenId);
         LandInformation[_tokenId].owner = _to;
         emit TransferToken(msg.sender, _to, _tokenId);
     }
