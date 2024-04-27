@@ -39,6 +39,11 @@ contract Land is ERC721URIStorage {
         _;
     }
 
+    modifier invalidTokenId(uint _tokenId) {
+        _invalidTokenId(_tokenId);
+        _;
+    }
+
     struct LandStructure {
         address payable owner;
         uint regionId;
@@ -105,6 +110,13 @@ contract Land is ERC721URIStorage {
         emit ChangeLandPrice(msg.sender, oldPrice, _newPrice);
     }
 
+    function setTokenURI(
+        uint _tokenId,
+        string memory _newTokenURI
+    ) external onlyOwner invalidTokenId(_tokenId) {
+        _setTokenURI(_tokenId, _newTokenURI);
+    }
+
     function approveLandToken(address _to, uint _tokenId) external {
         approve(_to, _tokenId);
         emit Approval(msg.sender, _to, _tokenId);
@@ -132,10 +144,14 @@ contract Land is ERC721URIStorage {
         require(_to != address(0), "Invalid address!");
     }
 
-    function _nftOwner(uint _tokenId) public view {
+    function _nftOwner(uint _tokenId) private view {
         require(
             msg.sender == LandInformation[_tokenId].owner,
             "You are not nft owner!"
         );
+    }
+
+    function _invalidTokenId(uint _tokenId) private view {
+        require(_tokenId <= tokenIds, "invalid tokenId");
     }
 }
