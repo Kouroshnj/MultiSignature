@@ -7,10 +7,10 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 
 contract Land is ERC721URIStorage {
     address public owner;
-    uint private tokenIds;
+    uint24 private tokenIds;
 
-    event MintToken(uint toeknId, address signer, address owner);
-    event TransferToken(address from, address to, uint tokenId);
+    event MintToken(uint24 toeknId, address signer, address owner);
+    event TransferToken(address from, address to, uint24 tokenId);
     event SetEnhancements(address signer, string[] items);
     event ChangeLandLocation(
         address signer,
@@ -18,6 +18,7 @@ contract Land is ERC721URIStorage {
         uint[2] newLocations
     );
     event ChangeLandPrice(address signer, uint oldPrice, uint newPrice);
+    event ChangeOwner(address signer, address newOwner);
 
     constructor() ERC721("MirroraVillage", "MIRV") {
         owner = msg.sender;
@@ -33,20 +34,20 @@ contract Land is ERC721URIStorage {
         _;
     }
 
-    modifier nftOwner(uint tokenId) {
+    modifier nftOwner(uint24 tokenId) {
         _nftOwner(tokenId);
         _;
     }
 
-    modifier invalidTokenId(uint _tokenId) {
+    modifier invalidTokenId(uint24 _tokenId) {
         _invalidTokenId(_tokenId);
         _;
     }
 
     struct LandStructure {
         address payable owner;
-        uint regionId;
-        uint landId;
+        uint8 regionId;
+        uint24 landId;
         uint8 landSize;
         uint[2] landLocation;
         string[] enhancements;
@@ -56,10 +57,10 @@ contract Land is ERC721URIStorage {
     mapping(uint => LandStructure) private LandInformation;
 
     function mintLandToken(
-        uint _regionId,
+        uint8 _regionId,
         uint8 _landSize,
         uint[2] memory _landLocation,
-        uint _landPrice,
+        uint24 _landPrice,
         address payable _to,
         string memory _tokenURI
     ) public onlyOwner zeroAddress(_to) returns (uint) {
@@ -76,26 +77,26 @@ contract Land is ERC721URIStorage {
         return tokenIds;
     }
 
+    function setEnhancement(
+        string[] memory _items,
+        uint24 _tokenId
+    ) external nftOwner(_tokenId) {
+        LandInformation[_tokenId].enhancements = _items;
+        emit SetEnhancements(msg.sender, _items);
+    }
+
     function transferLandToken(
         address payable _from,
         address payable _to,
-        uint _tokenId
+        uint24 _tokenId
     ) external zeroAddress(_to) {
         safeTransferFrom(_from, _to, _tokenId);
         LandInformation[_tokenId].owner = _to;
         emit TransferToken(msg.sender, _to, _tokenId);
     }
 
-    function setEnhancement(
-        string[] memory _items,
-        uint _tokenId
-    ) external nftOwner(_tokenId) {
-        LandInformation[_tokenId].enhancements = _items;
-        emit SetEnhancements(msg.sender, _items);
-    }
-
     function changeLandLocation(
-        uint _tokenId,
+        uint24 _tokenId,
         uint[2] memory _newlocations
     ) external onlyOwner {
         uint[2] memory oldLocations = LandInformation[_tokenId].landLocation;
@@ -109,24 +110,31 @@ contract Land is ERC721URIStorage {
         emit ChangeLandPrice(msg.sender, oldPrice, _newPrice);
     }
 
+    function changeOwner(
+        address _newOwner
+    ) external onlyOwner zeroAddress(_newOwner) {
+        owner = _newOwner;
+        emit ChangeOwner(msg.sender, _newOwner);
+    }
+
     function setTokenURI(
-        uint _tokenId,
+        uint24 _tokenId,
         string memory _newTokenURI
     ) external onlyOwner invalidTokenId(_tokenId) {
         _setTokenURI(_tokenId, _newTokenURI);
     }
 
-    function approveLandToken(address _to, uint _tokenId) external {
+    function approveLandToken(address _to, uint24 _tokenId) external {
         approve(_to, _tokenId);
         emit Approval(msg.sender, _to, _tokenId);
     }
 
-    function getTokenURI(uint _tokenId) public view returns (string memory) {
+    function getTokenURI(uint24 _tokenId) public view returns (string memory) {
         return tokenURI(_tokenId);
     }
 
     function getTokenInfo(
-        uint _tokenId
+        uint24 _tokenId
     ) public view returns (LandStructure memory) {
         return LandInformation[_tokenId];
     }
@@ -143,14 +151,14 @@ contract Land is ERC721URIStorage {
         require(_to != address(0), "Invalid address!");
     }
 
-    function _nftOwner(uint _tokenId) private view {
+    function _nftOwner(uint24 _tokenId) private view {
         require(
             msg.sender == LandInformation[_tokenId].owner,
             "You are not nft owner!"
         );
     }
 
-    function _invalidTokenId(uint _tokenId) private view {
+    function _invalidTokenId(uint24 _tokenId) private view {
         require(_tokenId <= tokenIds, "invalid tokenId");
     }
 }

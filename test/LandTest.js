@@ -1,6 +1,5 @@
 const { expect } = require("chai")
 const { ethers } = require("hardhat")
-const { BigNumber } = require("ethers")
 
 
 describe("deploy contract successfully", () => {
@@ -15,7 +14,7 @@ describe("deploy contract successfully", () => {
 
     const mintToken = async () => {
         const [signer, addr1] = await ethers.getSigners()
-        await landContract.mintLandToken(1, 1, [22, 33], 400, addr1, "randomURL");
+        await landContract.mintLandToken(1, 1, [22, 33], 400, addr1, "testURI.com");
     }
     beforeEach(mintToken)
 
@@ -71,5 +70,23 @@ describe("deploy contract successfully", () => {
         let tokenData = await landContract.getTokenInfo(1);
         expect(tokenData[0]).to.eql(addr2.address)
         expect(tokenData[0]).not.eql(addr1.address)
+    })
+
+    it("should change the tokenURI of token", async () => {
+        const [signer, addr1] = await ethers.getSigners();
+        const tokenId = 1;
+        const randomURI = "randomURI.com"
+        const oldURI = await landContract.tokenURI(tokenId)
+        await landContract.connect(signer).setTokenURI(tokenId, randomURI);
+        const newURI = await landContract.tokenURI(tokenId)
+        expect(newURI).not.eql(oldURI)
+    })
+
+    it("owner must change the ownership od contract", async () => {
+        const [signer, addr1] = await ethers.getSigners();
+        await landContract.connect(signer).changeOwner(addr1.address);
+        const currentOwner = await landContract.owner();
+        expect(currentOwner).to.eql(addr1.address)
+        expect(currentOwner).not.eql(signer.address)
     })
 })
