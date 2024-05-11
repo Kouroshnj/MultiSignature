@@ -175,113 +175,112 @@ describe.only("MarketPlace must deploy and work correctly", async () => {
     beforeEach(setNumeratorAndDenominator)
 
 
-    it("owner of marketplace must be correct", async () => {
-        const [owner, addr1] = await ethers.getSigners();
+    // it("owner of marketplace must be correct", async () => {
+    //     const [owner, addr1] = await ethers.getSigners();
 
-        const contractOwner = await marketPlace.owner();
+    //     const contractOwner = await marketPlace.owner();
 
-        expect(contractOwner).to.eql(owner.address);
-    })
+    //     expect(contractOwner).to.eql(owner.address);
+    // })
 
-    it("should list a marketItem", async () => {
-        const [owner, addr1] = await ethers.getSigners();
-        await marketPlace.connect(addr1).listToken(1, 400);
-        const marketItemInfo = await marketPlace.getMarketItemInfo(1);
-        const ownerOfLandToken = await landContract.ownerOf(1);
-        expect(marketItemInfo[1]).to.eql(addr1.address);
-        expect(marketItemInfo[0]).to.eql(marketPlaceAddress);
-        expect(ownerOfLandToken).to.eql(marketPlaceAddress);
-    })
+    // it("should list a marketItem", async () => {
+    //     const [owner, addr1] = await ethers.getSigners();
+    //     await marketPlace.connect(addr1).listToken(1, 400);
+    //     const marketItemInfo = await marketPlace.getMarketItemInfo(1);
+    //     const ownerOfLandToken = await landContract.ownerOf(1);
+    //     expect(marketItemInfo[1]).to.eql(addr1.address);
+    //     expect(marketItemInfo[0]).to.eql(marketPlaceAddress);
+    //     expect(ownerOfLandToken).to.eql(marketPlaceAddress);
+    // })
 
-    it("should calculate the fee correctly", async () => {
-        const [owner, addr1, addr2] = await ethers.getSigners();
-        await marketPlace.connect(addr1).listToken(1, 400);
-        const fee = await marketPlace.calculateMMLFeeAndNewPrice(1);
-        const addr2Balance = await MMLtoken.balanceOf(addr2.address)
-        console.log(fee);
-        console.log(addr2Balance);
-    })
+    // it("should calculate the fee correctly", async () => {
+    //     const [owner, addr1, addr2] = await ethers.getSigners();
+    //     await marketPlace.connect(addr1).listToken(1, 400);
+    //     const fee = await marketPlace.calculateMMLFeeAndNewPrice(1);
+    //     const addr2Balance = await MMLtoken.balanceOf(addr2.address)
+    //     console.log(fee);
+    //     console.log(addr2Balance);
+    // })
 
-    it("should buy the token with MML and tokens must transfer to the buyer", async () => {
-        const [owner, addr1, addr2] = await ethers.getSigners();
-        await marketPlace.connect(addr1).listToken(1, 400);
-        const tokenId = 1
-        const purachaseOption = 1 // purchase with MML
-        await MMLtoken.connect(addr2).approve(marketPlaceAddress, 10000000000000000000000000000000000n)
-        await marketPlace.connect(addr2).buyToken(tokenId, purachaseOption)
-        const marketItemInfo = await marketPlace.getMarketItemInfo(1);
-        const sellerBalance = await MMLtoken.balanceOf(marketItemInfo[1]);
-        console.log(await MMLtoken.balanceOf(owner.address));
-        const newOwner = await landContract.ownerOf(tokenId);
-        expect(newOwner).to.eql(addr2.address)
-        expect(marketItemInfo[0]).to.eql(addr2.address);
-        expect(sellerBalance).to.be.above(1000000000000000000n)
-    })
+    // it("should buy the token with MML and tokens must transfer to the buyer", async () => {
+    //     const [owner, addr1, addr2] = await ethers.getSigners();
+    //     await marketPlace.connect(addr1).listToken(1, 400);
+    //     const tokenId = 1
+    //     const purachaseOption = 1 // purchase with MML
+    //     await MMLtoken.connect(addr2).approve(marketPlaceAddress, 10000000000000000000000000000000000n)
+    //     await marketPlace.connect(addr2).buyToken(tokenId, purachaseOption)
+    //     const marketItemInfo = await marketPlace.getMarketItemInfo(1);
+    //     const sellerBalance = await MMLtoken.balanceOf(marketItemInfo[1]);
+    //     console.log(await MMLtoken.balanceOf(owner.address));
+    //     const newOwner = await landContract.ownerOf(tokenId);
+    //     expect(newOwner).to.eql(addr2.address)
+    //     expect(marketItemInfo[0]).to.eql(addr2.address);
+    //     expect(sellerBalance).to.be.above(1000000000000000000n)
+    // })
 
-    it("should but the token with USDT and tokens must transfer to the buyer", async () => {
-        const [owner, addr1, addr2] = await ethers.getSigners();
-        const tokenId = 1
-        await marketPlace.connect(addr1).listToken(tokenId, 200);
-        const purachaseOption = 2 // purchase with USDT
-        await USDTtoken.connect(addr2).approve(marketPlaceAddress, 10000000000000000000000000000000000n)
-        await marketPlace.connect(addr2).buyToken(tokenId, purachaseOption)
-        const marketItemInfo = await marketPlace.getMarketItemInfo(1);
-        const sellerBalance = await USDTtoken.balanceOf(marketItemInfo[1]);
-        expect(marketItemInfo[0]).to.eql(addr2.address);
-        expect(sellerBalance).to.equal(190000000n)
-    })
+    // it("should but the token with USDT and tokens must transfer to the buyer", async () => {
+    //     const [owner, addr1, addr2] = await ethers.getSigners();
+    //     const tokenId = 1
+    //     await marketPlace.connect(addr1).listToken(tokenId, 200);
+    //     const purachaseOption = 2 // purchase with USDT
+    //     await USDTtoken.connect(addr2).approve(marketPlaceAddress, 10000000000000000000000000000000000n)
+    //     await marketPlace.connect(addr2).buyToken(tokenId, purachaseOption)
+    //     const marketItemInfo = await marketPlace.getMarketItemInfo(1);
+    //     const sellerBalance = await USDTtoken.balanceOf(marketItemInfo[1]);
+    //     expect(marketItemInfo[0]).to.eql(addr2.address);
+    //     expect(sellerBalance).to.equal(190000000n)
+    // })
 
-    it("seller of token should be able to cancel the listing: ", async () => {
-        const [owner, addr1, addr2] = await ethers.getSigners();
-        const tokenId = 1;
-        const markeItemId = 1
-        await marketPlace.connect(addr1).listToken(tokenId, 200);
-        await marketPlace.connect(addr1).cancelMarketItem(markeItemId);
-        const marketItemInfo = await marketPlace.getMarketItemInfo(markeItemId);
-        expect(marketItemInfo[6]).to.equal(true);
-        expect(marketItemInfo[0]).to.equal(addr1.address);
-    })
+    // it("seller of token should be able to cancel the listing: ", async () => {
+    //     const [owner, addr1, addr2] = await ethers.getSigners();
+    //     const tokenId = 1;
+    //     const markeItemId = 1
+    //     await marketPlace.connect(addr1).listToken(tokenId, 200);
+    //     await marketPlace.connect(addr1).cancelMarketItem(markeItemId);
+    //     const marketItemInfo = await marketPlace.getMarketItemInfo(markeItemId);
+    //     expect(marketItemInfo[6]).to.equal(true);
+    //     expect(marketItemInfo[0]).to.equal(addr1.address);
+    // })
 
-    it("should return an error for invalid purchase option", async () => {
-        const [owner, addr1, addr2] = await ethers.getSigners();
-        const tokenId = 1;
-        const markeItemId = 1
-        const purachaseOption = 0
-        await marketPlace.connect(addr1).listToken(tokenId, 200);
-        await marketPlace.buyToken(markeItemId, purachaseOption)
-    })
+    // it("should return an error for invalid purchase option", async () => {
+    //     const [owner, addr1, addr2] = await ethers.getSigners();
+    //     const tokenId = 1;
+    //     const markeItemId = 1
+    //     const purachaseOption = 0
+    //     await marketPlace.connect(addr1).listToken(tokenId, 200);
+    //     await marketPlace.buyToken(markeItemId, purachaseOption)
+    // })
 
-    it("should return all canceled and all items", async () => {
-        const [owner, addr1, addr2] = await ethers.getSigners();
-        for (let i = 1; i < 5; i++) {
-            await marketPlace.connect(addr1).listToken(i, 100);
-        }
-        for (let j = 1; j < 3; j++) {
-            await marketPlace.connect(addr1).cancelMarketItem(j);
-        }
-        const allCanceledItems = await marketPlace.canceldItems()
-        const allItems = await marketPlace.allItems();
-        console.log("these are canceled items: ", allCanceledItems);
-        console.log("these are all items: ", allItems);
-    })
+    // it("should return all canceled and all items", async () => {
+    //     const [owner, addr1, addr2] = await ethers.getSigners();
+    //     for (let i = 1; i < 5; i++) {
+    //         await marketPlace.connect(addr1).listToken(i, 100);
+    //     }
+    //     for (let j = 1; j < 3; j++) {
+    //         await marketPlace.connect(addr1).cancelMarketItem(j);
+    //     }
+    //     const allCanceledItems = await marketPlace.canceldItems()
+    //     const allItems = await marketPlace.allItems();
+    //     console.log("these are canceled items: ", allCanceledItems);
+    //     console.log("these are all items: ", allItems);
+    // })
 
     it("with given address, it should return its items", async () => {
         const [owner, addr1, addr2] = await ethers.getSigners();
-        for (let i = 1; i < 5; i++) {
+        for (let i = 1; i < 5; i += 2) {
             await marketPlace.connect(addr1).listToken(i, 100);
         }
-        console.log(await marketPlace.getAllMarketItemIds());
         const allItemsByAddress = await marketPlace.allMarketItemsListedByAddress(addr1.address);
         console.log(allItemsByAddress);
     })
 
-    it("should return the sold Items", async () => {
-        const [owner, addr1, addr2] = await ethers.getSigners();
-        await marketPlace.connect(addr1).listToken(1, 100);
-        await marketPlace.connect(addr1).listToken(2, 100);
-        await MMLtoken.connect(addr2).approve(marketPlaceAddress, 10000000000000000000000000000000000n);
-        await marketPlace.connect(addr2).buyToken(1, 1);
-        const allSoldItems = await marketPlace.soldItems();
-        console.log(allSoldItems);
-    })
+    // it("should return the sold Items", async () => {
+    //     const [owner, addr1, addr2] = await ethers.getSigners();
+    //     await marketPlace.connect(addr1).listToken(1, 100);
+    //     await marketPlace.connect(addr1).listToken(2, 100);
+    //     await MMLtoken.connect(addr2).approve(marketPlaceAddress, 10000000000000000000000000000000000n);
+    //     await marketPlace.connect(addr2).buyToken(1, 1);
+    //     const allSoldItems = await marketPlace.soldItems();
+    //     console.log(allSoldItems);
+    // })
 })

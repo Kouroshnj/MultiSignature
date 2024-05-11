@@ -275,8 +275,8 @@ contract Marketplace is ReentrancyGuard, UniswapV3Twap {
         MarketItem[] memory items = new MarketItem[](k);
         for (uint i = 0; i < marketItemIds; i++) {
             items[i] = MarketItemInfo[j];
+            j++;
         }
-        j++;
 
         return items;
     }
