@@ -20,7 +20,9 @@ contract Marketplace is ReentrancyGuard, UniswapV3Twap {
 
     //@dev Number of all market items that have been listed
     //@notice we can get the number by calling the function "getAllMarketItemIds"
-    uint192 private marketItemIds;
+    uint192 private marketItemIds = 0;
+    uint192 private canceledItemsIds = 0;
+    uint192 private soldItemIds = 0;
 
     event ListingItem(address tokenOwner, uint192 tokenId, uint price);
     event BuyItem(
@@ -99,7 +101,7 @@ contract Marketplace is ReentrancyGuard, UniswapV3Twap {
     function listToken(
         uint192 _tokenId,
         uint256 _price
-    ) public returns (uint256) {
+    ) public returns (uint192) {
         marketItemIds += 1;
         Landaddress.transferFrom(msg.sender, address(this), _tokenId);
         MarketItemInfo[marketItemIds].owner = payable(address(this));
@@ -152,6 +154,7 @@ contract Marketplace is ReentrancyGuard, UniswapV3Twap {
         Landaddress.transferFrom(address(this), msg.sender, tokenID);
         MarketItemInfo[_marketItemId].owner = payable(msg.sender);
         MarketItemInfo[_marketItemId].sold = true;
+        soldItemIds++;
         emit BuyItem(msg.sender, tokenID, _purchaseOption);
     }
 
@@ -167,6 +170,7 @@ contract Marketplace is ReentrancyGuard, UniswapV3Twap {
         Landaddress.transferFrom(address(this), msg.sender, tokenID);
         MarketItemInfo[_marketItemId].owner = payable(msg.sender);
         MarketItemInfo[_marketItemId].canceled = true;
+        canceledItemsIds += 1;
         emit CancelItem(msg.sender, tokenID);
     }
 
@@ -220,6 +224,61 @@ contract Marketplace is ReentrancyGuard, UniswapV3Twap {
 
     function getAllMarketItemIds() public view returns (uint192) {
         return marketItemIds;
+    }
+
+    function allItems() public view returns (MarketItem[] memory) {
+        uint j = 1;
+        MarketItem[] memory items = new MarketItem[](marketItemIds);
+        for (uint i = 0; i < marketItemIds; i++) {
+            items[i] = MarketItemInfo[j];
+            j++;
+        }
+        return items;
+    }
+
+    function canceldItems() public view returns (MarketItem[] memory) {
+        uint j = 1;
+        MarketItem[] memory items = new MarketItem[](canceledItemsIds);
+        for (uint i = 0; i < marketItemIds; i++) {
+            if (MarketItemInfo[j].canceled) {
+                items[i] = MarketItemInfo[j];
+            }
+            j++;
+        }
+        return items;
+    }
+
+    function soldItems() public view returns (MarketItem[] memory) {
+        uint j = 1;
+        MarketItem[] memory items = new MarketItem[](soldItemIds);
+        for (uint i = 0; i < marketItemIds; i++) {
+            if (MarketItemInfo[j].sold) {
+                items[i] = MarketItemInfo[j];
+            }
+            j++;
+        }
+        return items;
+    }
+
+    function allMarketItemsListedByAddress(
+        address _userAddress
+    ) public view returns (MarketItem[] memory) {
+        uint k = 0;
+        uint j = 1;
+        for (uint i = 0; i < marketItemIds; i++) {
+            if (MarketItemInfo[j].seller == _userAddress) {
+                k++;
+            }
+            j++;
+        }
+        j = 1;
+        MarketItem[] memory items = new MarketItem[](k);
+        for (uint i = 0; i < k; i++) {
+            items[i] = MarketItemInfo[j];
+        }
+        j++;
+
+        return items;
     }
 
     function _onlyOwner() private view {

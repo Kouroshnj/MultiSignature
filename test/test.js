@@ -155,9 +155,16 @@ describe.only("MarketPlace must deploy and work correctly", async () => {
         const [owner, addr1, addr2] = await ethers.getSigners();
         await USDTtoken.mint(addr2.address);
         await MMLtoken.mint(addr2.address);
-        await landContract.connect(owner).mintLandToken(1, 1, [22, 33], 400, addr1, "testURI.com");
         marketPlaceAddress = await marketPlace.getAddress()
-        await landContract.connect(addr1).approveLandToken(marketPlaceAddress, 1);
+        for (let i = 1; i < 5; i++) {
+            await landContract.connect(owner).mintLandToken(1, i, [i, i], 100, addr1, "testURI.com")
+            await landContract.connect(addr1).approveLandToken(marketPlaceAddress, i);
+        }
+        // for (let j = 5; j < 9; j++) {
+        //     await landContract.connect(owner).mintLandToken(1, j, [j, j], 100, addr2, "testURI.com")
+        //     await landContract.connect(addr2).approveLandToken(marketPlaceAddress, j);
+        // }
+        // await landContract.connect(owner).mintLandToken(1, 1, [22, 33], 400, addr1, "testURI.com");
         await USDTtoken.connect(addr2).approve(marketPlaceAddress, 10000000000000000000000000000000000n)
     }
     beforeEach(mintAllTokens)
@@ -244,4 +251,37 @@ describe.only("MarketPlace must deploy and work correctly", async () => {
         await marketPlace.buyToken(markeItemId, purachaseOption)
     })
 
+    it("should return all canceled and all items", async () => {
+        const [owner, addr1, addr2] = await ethers.getSigners();
+        for (let i = 1; i < 5; i++) {
+            await marketPlace.connect(addr1).listToken(i, 100);
+        }
+        for (let j = 1; j < 3; j++) {
+            await marketPlace.connect(addr1).cancelMarketItem(j);
+        }
+        const allCanceledItems = await marketPlace.canceldItems()
+        const allItems = await marketPlace.allItems();
+        console.log("these are canceled items: ", allCanceledItems);
+        console.log("these are all items: ", allItems);
+    })
+
+    it("with given address, it should return its items", async () => {
+        const [owner, addr1, addr2] = await ethers.getSigners();
+        for (let i = 1; i < 5; i++) {
+            await marketPlace.connect(addr1).listToken(i, 100);
+        }
+        console.log(await marketPlace.getAllMarketItemIds());
+        const allItemsByAddress = await marketPlace.allMarketItemsListedByAddress(addr1.address);
+        console.log(allItemsByAddress);
+    })
+
+    it("should return the sold Items", async () => {
+        const [owner, addr1, addr2] = await ethers.getSigners();
+        await marketPlace.connect(addr1).listToken(1, 100);
+        await marketPlace.connect(addr1).listToken(2, 100);
+        await MMLtoken.connect(addr2).approve(marketPlaceAddress, 10000000000000000000000000000000000n);
+        await marketPlace.connect(addr2).buyToken(1, 1);
+        const allSoldItems = await marketPlace.soldItems();
+        console.log(allSoldItems);
+    })
 })
