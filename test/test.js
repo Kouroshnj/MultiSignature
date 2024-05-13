@@ -156,14 +156,14 @@ describe.only("MarketPlace must deploy and work correctly", async () => {
         await USDTtoken.mint(addr2.address);
         await MMLtoken.mint(addr2.address);
         marketPlaceAddress = await marketPlace.getAddress()
-        for (let i = 1; i < 5; i++) {
+        for (let i = 1; i < 3; i++) {
             await landContract.connect(owner).mintLandToken(1, i, [i, i], 100, addr1, "testURI.com")
             await landContract.connect(addr1).approveLandToken(marketPlaceAddress, i);
         }
-        // for (let j = 5; j < 9; j++) {
-        //     await landContract.connect(owner).mintLandToken(1, j, [j, j], 100, addr2, "testURI.com")
-        //     await landContract.connect(addr2).approveLandToken(marketPlaceAddress, j);
-        // }
+        for (let j = 3; j < 5; j++) {
+            await landContract.connect(owner).mintLandToken(1, j, [j, j], 100, addr2, "testURI.com")
+            await landContract.connect(addr2).approveLandToken(marketPlaceAddress, j);
+        }
         // await landContract.connect(owner).mintLandToken(1, 1, [22, 33], 400, addr1, "testURI.com");
         await USDTtoken.connect(addr2).approve(marketPlaceAddress, 10000000000000000000000000000000000n)
     }
@@ -265,14 +265,14 @@ describe.only("MarketPlace must deploy and work correctly", async () => {
     //     console.log("these are all items: ", allItems);
     // })
 
-    it("with given address, it should return its items", async () => {
-        const [owner, addr1, addr2] = await ethers.getSigners();
-        for (let i = 1; i < 5; i += 2) {
-            await marketPlace.connect(addr1).listToken(i, 100);
-        }
-        const allItemsByAddress = await marketPlace.allMarketItemsListedByAddress(addr1.address);
-        console.log(allItemsByAddress);
-    })
+    // it("with given address, it should return its items", async () => {
+    //     const [owner, addr1, addr2] = await ethers.getSigners();
+    //     await marketPlace.connect(addr1).listToken(1, 100);
+    //     await marketPlace.connect(addr2).listToken(3, 100);
+    //     await marketPlace.connect(addr1).listToken(2, 100);
+    //     const allItemsByAddress = await marketPlace.allMarketItemsListedByAddress(addr1.address);
+    //     console.log(allItemsByAddress);
+    // })
 
     // it("should return the sold Items", async () => {
     //     const [owner, addr1, addr2] = await ethers.getSigners();
@@ -283,4 +283,16 @@ describe.only("MarketPlace must deploy and work correctly", async () => {
     //     const allSoldItems = await marketPlace.soldItems();
     //     console.log(allSoldItems);
     // })
+
+    it("return items info by calling 'marketItemsListedByAddress' function ", async () => {
+        const [owner, addr1, addr2] = await ethers.getSigners();
+        await marketPlace.connect(addr1).listToken(1, 100);
+        await marketPlace.connect(addr2).listToken(3, 300);
+        await marketPlace.connect(addr2).listToken(4, 400);
+        await marketPlace.connect(addr1).listToken(2, 200);
+        const getInfo = await marketPlace.allMarketItemsListedByAddress(addr1.address)
+        const getInfo2 = await marketPlace.marketItemsListedByAddress(addr2.address)
+        console.log("info 1 is: ", getInfo);
+        console.log("info 2 is: ", getInfo2);
+    })
 })

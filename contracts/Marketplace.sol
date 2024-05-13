@@ -265,20 +265,53 @@ contract Marketplace is ReentrancyGuard, UniswapV3Twap {
     ) public view returns (MarketItem[] memory) {
         uint k = 0;
         uint j = 1;
+        uint192 l = 1;
         for (uint i = 0; i < marketItemIds; i++) {
             if (MarketItemInfo[j].seller == _userAddress) {
                 k++;
             }
             j++;
         }
-        j = 1;
         MarketItem[] memory items = new MarketItem[](k);
+        k = 0;
         for (uint i = 0; i < marketItemIds; i++) {
-            items[i] = MarketItemInfo[j];
-            j++;
+            if (MarketItemInfo[l].seller == _userAddress) {
+                items[k] = MarketItemInfo[l];
+                k += 1;
+            }
+            l++;
         }
 
         return items;
+    }
+
+    function numberOfItemsListedByAddress(
+        address _userAddress
+    ) internal view returns (uint192, uint[] memory) {
+        uint192 k = 0;
+        uint192 j = 1;
+        uint[] memory marketItemsByAddress = new uint[](marketItemIds);
+        for (uint i = 0; i < marketItemIds; i++) {
+            if (MarketItemInfo[j].seller == _userAddress) {
+                marketItemsByAddress[k] = j;
+                k++;
+            }
+            j++;
+        }
+        return (k, marketItemsByAddress);
+    }
+
+    function marketItemsListedByAddress(
+        address _userAddress
+    ) public view returns (MarketItem[] memory) {
+        (uint k, uint[] memory itemIds) = numberOfItemsListedByAddress(
+            _userAddress
+        );
+        MarketItem[] memory itemsInfo = new MarketItem[](k);
+        for (uint i = 0; i < k; i++) {
+            itemsInfo[i] = MarketItemInfo[itemIds[i]];
+        }
+        return itemsInfo;
     }
 
     function _onlyOwner() private view {
