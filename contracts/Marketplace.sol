@@ -263,8 +263,8 @@ contract Marketplace is ReentrancyGuard, UniswapV3Twap {
     function allMarketItemsListedByAddress(
         address _userAddress
     ) public view returns (MarketItem[] memory) {
-        uint k = 0;
-        uint j = 1;
+        uint192 k = 0;
+        uint192 j = 1;
         uint192 l = 1;
         for (uint i = 0; i < marketItemIds; i++) {
             if (MarketItemInfo[j].seller == _userAddress) {
@@ -304,7 +304,7 @@ contract Marketplace is ReentrancyGuard, UniswapV3Twap {
     function marketItemsListedByAddress(
         address _userAddress
     ) public view returns (MarketItem[] memory) {
-        (uint k, uint[] memory itemIds) = numberOfItemsListedByAddress(
+        (uint192 k, uint[] memory itemIds) = numberOfItemsListedByAddress(
             _userAddress
         );
         MarketItem[] memory itemsInfo = new MarketItem[](k);

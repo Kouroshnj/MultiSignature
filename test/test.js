@@ -152,9 +152,10 @@ describe.only("MarketPlace must deploy and work correctly", async () => {
     beforeEach(deployTokens)
 
     const mintAllTokens = async () => {
-        const [owner, addr1, addr2] = await ethers.getSigners();
+        const [owner, addr1, addr2, addr3] = await ethers.getSigners();
         await USDTtoken.mint(addr2.address);
         await MMLtoken.mint(addr2.address);
+        await MMLtoken.mint(addr3.address);
         marketPlaceAddress = await marketPlace.getAddress()
         for (let i = 1; i < 3; i++) {
             await landContract.connect(owner).mintLandToken(1, i, [i, i], 100, addr1, "testURI.com")
@@ -231,6 +232,17 @@ describe.only("MarketPlace must deploy and work correctly", async () => {
     //     expect(sellerBalance).to.equal(190000000n)
     // })
 
+    // it("not being able to buy sold item", async () => {
+    //     const [owner, addr1, addr2, addr3] = await ethers.getSigners();
+    //     const tokenId = 1;
+    //     const purchaseOption = 1;
+    //     await marketPlace.connect(addr1).listToken(tokenId, 200);
+    //     await MMLtoken.connect(addr2).approve(marketPlaceAddress, 10000000000000000000000000000000000n);
+    //     await MMLtoken.connect(addr3).approve(marketPlaceAddress, 10000000000000000000000000000000000n);
+    //     await marketPlace.connect(addr2).buyToken(tokenId, purchaseOption);
+    //     expect(await marketPlace.connect(addr3).buyToken(tokenId, purchaseOption)).to.be.revertedWith('Item has sold!')
+    // })
+
     // it("seller of token should be able to cancel the listing: ", async () => {
     //     const [owner, addr1, addr2] = await ethers.getSigners();
     //     const tokenId = 1;
@@ -240,6 +252,16 @@ describe.only("MarketPlace must deploy and work correctly", async () => {
     //     const marketItemInfo = await marketPlace.getMarketItemInfo(markeItemId);
     //     expect(marketItemInfo[6]).to.equal(true);
     //     expect(marketItemInfo[0]).to.equal(addr1.address);
+    // })
+
+    // it("should return all market items", async () => {
+    //     const [owner, addr1, addr2] = await ethers.getSigners();
+    //     await marketPlace.connect(addr1).listToken(1, 100);
+    //     await marketPlace.connect(addr2).listToken(3, 300);
+    //     await marketPlace.connect(addr2).listToken(4, 400);
+    //     await marketPlace.connect(addr1).listToken(2, 200);
+    //     const allMarketItems = await marketPlace.allItems();
+    //     console.log(allMarketItems);
     // })
 
     // it("should return an error for invalid purchase option", async () => {
@@ -284,15 +306,15 @@ describe.only("MarketPlace must deploy and work correctly", async () => {
     //     console.log(allSoldItems);
     // })
 
-    it("return items info by calling 'marketItemsListedByAddress' function ", async () => {
-        const [owner, addr1, addr2] = await ethers.getSigners();
-        await marketPlace.connect(addr1).listToken(1, 100);
-        await marketPlace.connect(addr2).listToken(3, 300);
-        await marketPlace.connect(addr2).listToken(4, 400);
-        await marketPlace.connect(addr1).listToken(2, 200);
-        const getInfo = await marketPlace.allMarketItemsListedByAddress(addr1.address)
-        const getInfo2 = await marketPlace.marketItemsListedByAddress(addr2.address)
-        console.log("info 1 is: ", getInfo);
-        console.log("info 2 is: ", getInfo2);
-    })
+    // it("return items info by calling 'marketItemsListedByAddress' function ", async () => {
+    //     const [owner, addr1, addr2] = await ethers.getSigners();
+    //     await marketPlace.connect(addr1).listToken(1, 100);
+    //     await marketPlace.connect(addr2).listToken(3, 300);
+    //     await marketPlace.connect(addr2).listToken(4, 400);
+    //     await marketPlace.connect(addr1).listToken(2, 200);
+    //     const getInfo = await marketPlace.allMarketItemsListedByAddress(addr2.address)
+    //     const getInfo2 = await marketPlace.marketItemsListedByAddress(addr1.address)
+    //     console.log("info 1 is: ", getInfo);
+    //     console.log("info 2 is: ", getInfo2);
+    // })
 })
