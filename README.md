@@ -4,10 +4,15 @@ This project demonstrates a basic Hardhat use case. It comes with a sample contr
 
 Try running some of the following tasks:
 
+# Two differente Marketplaces in this repo : 
+<!-- Land Marketplace -->
+<!-- MirroraVillage Items Marketplace -->
+
 ```shell
 npx hardhat help
 npx hardhat test
 REPORT_GAS=true npx hardhat test
 npx hardhat node
+npx hardhat node --fork https://mainnet.infura.io/v3/YOUR-API-KEY
 npx hardhat ignition deploy ./ignition/modules/Lock.js
 ```
