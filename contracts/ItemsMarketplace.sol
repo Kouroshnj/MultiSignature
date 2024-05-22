@@ -2,17 +2,17 @@
 
 pragma solidity ^0.8.0;
 
+import "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
+import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./utils/UniswapV3Twap.sol";
 
-contract Marketplace is ReentrancyGuard, UniswapV3Twap {
+contract ItemsMarketplace is ERC1155Holder, ReentrancyGuard, UniswapV3Twap {
     address public owner;
     IERC20 public MMLaddress;
     IERC20 public USDTaddress;
-    IERC721 public Landaddress;
+    IERC1155 public ItemsAddress;
 
     //@dev numerator / denominator = feeToContract;
     uint8 numerator;
@@ -24,28 +24,40 @@ contract Marketplace is ReentrancyGuard, UniswapV3Twap {
     uint192 private canceledItemsIds = 0;
     uint192 private soldItemIds = 0;
 
-    event ListingItem(address tokenOwner, uint192 tokenId, uint price);
+    //@dev Map the id of market item to the structure
+    mapping(uint => MarketItem) private MarketItemInfo;
+
+    event ListingItem(
+        address tokenOwner,
+        uint192 tokenId,
+        uint tokenQuantity,
+        uint price
+    );
     event BuyItem(
         address buyer,
         uint192 tokenId,
+        uint tokenQuantity,
         PurchaseOptions purchaseOption
     );
     event CancelItem(address tokenOwner, uint192 tokenId);
 
-    //@dev Map the id of market item to the structure
-    mapping(uint => MarketItem) private MarketItemInfo;
+    enum PurchaseOptions {
+        None,
+        MML,
+        USDT
+    }
 
     constructor(
         address MMLtoken,
         address USDTtoken,
-        address LandToken,
+        address itemsAddress,
         address _factory,
         uint24 _UniswapFee
     ) UniswapV3Twap(_factory, MMLtoken, USDTtoken, _UniswapFee) {
         owner = msg.sender;
         MMLaddress = IERC20(MMLtoken);
         USDTaddress = IERC20(USDTtoken);
-        Landaddress = IERC721(LandToken);
+        ItemsAddress = IERC1155(itemsAddress);
     }
 
     modifier zeroAddress(uint192 marketItemId) {
@@ -78,46 +90,44 @@ contract Marketplace is ReentrancyGuard, UniswapV3Twap {
         _;
     }
 
-    enum PurchaseOptions {
-        None,
-        MML,
-        USDT
-    }
-
     struct MarketItem {
         address payable owner;
         address payable seller;
         uint price;
         uint192 marketItemId;
         uint192 tokenId;
+        uint tokenQuantity;
         bool sold;
         bool canceled;
     }
 
     receive() external payable {}
 
-    //@dev Listing the Land NFT in the marketplace.
-    //@notice After listing the NFT, owner must be the address of contract.
     function listToken(
         uint192 _tokenId,
+        uint _tokenQuantity,
         uint256 _price
     ) public returns (uint192) {
         marketItemIds += 1;
-        Landaddress.transferFrom(msg.sender, address(this), _tokenId);
+        ItemsAddress.safeTransferFrom(
+            msg.sender,
+            address(this),
+            _tokenId,
+            _tokenQuantity,
+            "0x"
+        );
         MarketItemInfo[marketItemIds].owner = payable(address(this));
         MarketItemInfo[marketItemIds].seller = payable(msg.sender);
         MarketItemInfo[marketItemIds].price = _price;
         MarketItemInfo[marketItemIds].marketItemId = marketItemIds;
         MarketItemInfo[marketItemIds].tokenId = _tokenId;
+        MarketItemInfo[marketItemIds].tokenQuantity = _tokenQuantity;
         MarketItemInfo[marketItemIds].sold = false;
         MarketItemInfo[marketItemIds].canceled = false;
-        emit ListingItem(msg.sender, _tokenId, _price);
+        emit ListingItem(msg.sender, _tokenId, _tokenQuantity, _price);
         return marketItemIds;
     }
 
-    //@dev Users can buy the item.
-    //@notice Users can choose in which way they want to purchase the item.
-    //@param _purchaseOption is an enum to choose between purchase options, MML or USDT.
     function buyToken(
         uint192 _marketItemId,
         PurchaseOptions _purchaseOption
@@ -132,6 +142,7 @@ contract Marketplace is ReentrancyGuard, UniswapV3Twap {
         uint marketItemPrice;
         address marketItemSeller = MarketItemInfo[_marketItemId].seller;
         uint192 tokenID = MarketItemInfo[_marketItemId].tokenId;
+        uint tokenQuantity = MarketItemInfo[_marketItemId].tokenQuantity;
         if (_purchaseOption == PurchaseOptions.MML) {
             (marketItemPrice, fee) = calculateMMLFeeAndNewPrice(_marketItemId);
             require(marketItemPrice > 0, "marketItemPrice is invalid!");
@@ -151,11 +162,17 @@ contract Marketplace is ReentrancyGuard, UniswapV3Twap {
                 marketItemPrice
             );
         }
-        Landaddress.transferFrom(address(this), msg.sender, tokenID);
+        ItemsAddress.safeTransferFrom(
+            address(this),
+            msg.sender,
+            tokenID,
+            tokenQuantity,
+            "0x"
+        );
         MarketItemInfo[_marketItemId].owner = payable(msg.sender);
         MarketItemInfo[_marketItemId].sold = true;
         soldItemIds++;
-        emit BuyItem(msg.sender, tokenID, _purchaseOption);
+        emit BuyItem(msg.sender, tokenID, tokenQuantity, _purchaseOption);
     }
 
     function cancelMarketItem(
@@ -167,11 +184,44 @@ contract Marketplace is ReentrancyGuard, UniswapV3Twap {
         canceled(_marketItemId)
     {
         uint192 tokenID = MarketItemInfo[_marketItemId].tokenId;
-        Landaddress.transferFrom(address(this), msg.sender, tokenID);
+        uint quantity = MarketItemInfo[_marketItemId].tokenQuantity;
+        ItemsAddress.safeTransferFrom(
+            address(this),
+            msg.sender,
+            tokenID,
+            quantity,
+            "0x"
+        );
         MarketItemInfo[_marketItemId].owner = payable(msg.sender);
         MarketItemInfo[_marketItemId].canceled = true;
         canceledItemsIds += 1;
         emit CancelItem(msg.sender, tokenID);
+    }
+
+    function calculateMMLFeeAndNewPrice(
+        uint192 _marketItemId
+    ) public view returns (uint, uint) {
+        uint marketItemPrice = MarketItemInfo[_marketItemId].price * 10 ** 6;
+        // uint totalMML = callEstimateAmountOut(
+        //     USDTaddress,
+        //     uint128(marketItemPrice),
+        //     10
+        // );
+        uint totalMML = priceOfOneUSDTinMML(marketItemPrice);
+        uint mul = totalMML * numerator;
+        (, uint fee) = SafeMath.tryDiv(mul, denominator);
+        totalMML -= fee;
+        return (totalMML, fee);
+    }
+
+    function calculateUSDTFeeAndNewPrice(
+        uint192 _marketItemId
+    ) public view returns (uint, uint) {
+        uint marketItemPrice = MarketItemInfo[_marketItemId].price * 10 ** 6;
+        uint mul = marketItemPrice * numerator;
+        (, uint fee) = SafeMath.tryDiv(mul, denominator);
+        marketItemPrice -= fee;
+        return (marketItemPrice, fee);
     }
 
     function setFeeToContract(
@@ -187,32 +237,6 @@ contract Marketplace is ReentrancyGuard, UniswapV3Twap {
         require(amount > 0, "Balance is zero!");
         (bool sent, ) = owner.call{value: amount}("");
         require(sent, "Failed to withdraw!");
-    }
-
-    function calculateMMLFeeAndNewPrice(
-        uint192 _marketItemId
-    ) public view returns (uint, uint) {
-        uint marketItemPrice = MarketItemInfo[_marketItemId].price * 10 ** 6;
-        uint totalMML = callEstimateAmountOut(
-            USDTaddress,
-            uint128(marketItemPrice),
-            10
-        );
-        // uint totalMML = priceOfOneUSDTinMML(marketItemPrice);
-        uint mul = totalMML * numerator;
-        (, uint fee) = SafeMath.tryDiv(mul, denominator);
-        totalMML -= fee;
-        return (totalMML, fee);
-    }
-
-    function calculateUSDTFeeAndNewPrice(
-        uint192 _marketItemId
-    ) internal view returns (uint, uint) {
-        uint marketItemPrice = MarketItemInfo[_marketItemId].price * 10 ** 6;
-        uint mul = marketItemPrice * numerator;
-        (, uint fee) = SafeMath.tryDiv(mul, denominator);
-        marketItemPrice -= fee;
-        return (marketItemPrice, fee);
     }
 
     function getMarketItemInfo(

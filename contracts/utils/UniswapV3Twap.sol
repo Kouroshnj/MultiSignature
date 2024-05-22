@@ -90,15 +90,10 @@ contract UniswapV3Twap {
         return estimateAmountOut(address(_tokenIn), _amountIn, _secondsAgo);
     }
 
-    function priceOfOneMMLInUSDT(
-        uint price
-    ) public pure returns (uint amountOut) {
-        return 445188 * price;
-    }
-
     function priceOfOneUSDTinMML(
         uint price
     ) public pure returns (uint amountOut) {
+        price /= 10 ** 6;
         return 2246238172973155145 * price;
     }
 }
