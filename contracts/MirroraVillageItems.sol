@@ -15,6 +15,7 @@ contract MirroraVillageItems is ERC1155URIStorage {
 
     event MintItem(string itemName, uint16 itemId, uint quantity);
     event BurnItem(string itemName, uint16 itemId, uint quantity);
+    event ChangeOwner(address previousOwner, address newOwner);
 
     mapping(uint => ItemInformation) private ItemInfo;
 
@@ -77,6 +78,11 @@ contract MirroraVillageItems is ERC1155URIStorage {
         bytes32 _newItemNameInBytes = keccak256(abi.encodePacked(_newName));
         ItemInfo[_itemId].itemNameInBytes = _newItemNameInBytes;
         ItemInfo[itemIds].itemName = _newName;
+    }
+
+    function changeOwner(address _newOwner) external onlyOwner {
+        owner = _newOwner;
+        emit ChangeOwner(msg.sender, _newOwner);
     }
 
     function transferItem(

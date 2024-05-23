@@ -40,6 +40,7 @@ contract ItemsMarketplace is ERC1155Holder, ReentrancyGuard, UniswapV3Twap {
         PurchaseOptions purchaseOption
     );
     event CancelItem(address tokenOwner, uint192 tokenId);
+    event ChangeOwner(address previousOwner, address newOwner);
 
     enum PurchaseOptions {
         None,
@@ -230,6 +231,11 @@ contract ItemsMarketplace is ERC1155Holder, ReentrancyGuard, UniswapV3Twap {
     ) external onlyOwner {
         numerator = _numerator;
         denominator = _denominator;
+    }
+
+    function changeOwner(address _newOwner) external onlyOwner {
+        owner = _newOwner;
+        emit ChangeOwner(msg.sender, _newOwner);
     }
 
     function withdraw() external onlyOwner {

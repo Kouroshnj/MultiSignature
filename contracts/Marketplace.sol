@@ -31,6 +31,7 @@ contract Marketplace is ReentrancyGuard, UniswapV3Twap {
         PurchaseOptions purchaseOption
     );
     event CancelItem(address tokenOwner, uint192 tokenId);
+    event ChangeOwner(address previousOwner, address newOwner);
 
     //@dev Map the id of market item to the structure
     mapping(uint => MarketItem) private MarketItemInfo;
@@ -207,12 +208,17 @@ contract Marketplace is ReentrancyGuard, UniswapV3Twap {
 
     function calculateUSDTFeeAndNewPrice(
         uint192 _marketItemId
-    ) internal view returns (uint, uint) {
+    ) public view returns (uint, uint) {
         uint marketItemPrice = MarketItemInfo[_marketItemId].price * 10 ** 6;
         uint mul = marketItemPrice * numerator;
         (, uint fee) = SafeMath.tryDiv(mul, denominator);
         marketItemPrice -= fee;
         return (marketItemPrice, fee);
+    }
+
+    function changeOwner(address _newOwner) external onlyOwner {
+        owner = _newOwner;
+        emit ChangeOwner(msg.sender, _newOwner);
     }
 
     function getMarketItemInfo(
