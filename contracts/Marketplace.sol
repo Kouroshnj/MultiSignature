@@ -194,12 +194,12 @@ contract Marketplace is ReentrancyGuard, UniswapV3Twap {
         uint192 _marketItemId
     ) public view returns (uint, uint) {
         uint marketItemPrice = MarketItemInfo[_marketItemId].price * 10 ** 6;
-        uint totalMML = callEstimateAmountOut(
-            USDTaddress,
-            uint128(marketItemPrice),
-            10
-        );
-        // uint totalMML = priceOfOneUSDTinMML(marketItemPrice);
+        // uint totalMML = callEstimateAmountOut(
+        //     USDTaddress,
+        //     uint128(marketItemPrice),
+        //     10
+        // );
+        uint totalMML = priceOfOneUSDTinMML(marketItemPrice);
         uint mul = totalMML * numerator;
         (, uint fee) = SafeMath.tryDiv(mul, denominator);
         totalMML -= fee;
@@ -242,25 +242,25 @@ contract Marketplace is ReentrancyGuard, UniswapV3Twap {
     }
 
     function canceldItems() public view returns (MarketItem[] memory) {
-        uint j = 1;
+        uint k = 0;
         MarketItem[] memory items = new MarketItem[](canceledItemsIds);
-        for (uint i = 0; i < marketItemIds; i++) {
-            if (MarketItemInfo[j].canceled) {
-                items[i] = MarketItemInfo[j];
+        for (uint i = 1; i <= marketItemIds; i++) {
+            if (MarketItemInfo[i].canceled) {
+                items[k] = MarketItemInfo[i];
+                k++;
             }
-            j++;
         }
         return items;
     }
 
     function soldItems() public view returns (MarketItem[] memory) {
-        uint j = 1;
+        uint k = 0;
         MarketItem[] memory items = new MarketItem[](soldItemIds);
-        for (uint i = 0; i < marketItemIds; i++) {
-            if (MarketItemInfo[j].sold) {
-                items[i] = MarketItemInfo[j];
+        for (uint i = 1; i <= marketItemIds; i++) {
+            if (MarketItemInfo[i].sold) {
+                items[k] = MarketItemInfo[i];
+                k++;
             }
-            j++;
         }
         return items;
     }
