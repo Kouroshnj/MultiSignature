@@ -9,7 +9,7 @@ contract MirroraVillageItems is ERC1155URIStorage {
     address public owner;
     uint16 private itemIds;
 
-    constructor() ERC1155("https://mirroraVillage/api/item/{id}.json") {
+    constructor() ERC1155("https://ipfs.com/ipfs/") {
         owner = msg.sender;
     }
 
