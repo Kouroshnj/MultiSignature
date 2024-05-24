@@ -153,11 +153,11 @@ describe("MarketPlace must deploy and work correctly", async () => {
         let USDTaddress = await USDTtoken.getAddress()
 
         //! Using TOKEN_0 and TOKEN_1 for testing contract in order to get price feeds in real world
-        marketPlace = await MarketPlace.deploy(TOKEN_0, TOKEN_1, landContract, FACTORY, FEE)
+        // marketPlace = await MarketPlace.deploy(TOKEN_0, TOKEN_1, landContract, FACTORY, FEE)
 
 
         //! Using MMLaddress and USDTaddress for testing the contract with custom ERC20 contracts.
-        // marketPlace = await MarketPlace.deploy(MMLaddress, USDTaddress, landContract, FACTORY, FEE);
+        marketPlace = await MarketPlace.deploy(MMLaddress, USDTaddress, landContract, FACTORY, FEE);
     }
     beforeEach(deployTokens)
 
@@ -230,7 +230,7 @@ describe("MarketPlace must deploy and work correctly", async () => {
         expect(sellerBalance).to.be.above(1000000000000000000n)
     })
 
-    it("calculated price from UniswapV3Twap and Marketplace must be equal", async () => {
+    it.skip("calculated price from UniswapV3Twap and Marketplace must be equal", async () => {
         const [owner, addr1, addr2] = await ethers.getSigners();
         const tokenId = 1;
         const quantity = 60;
@@ -263,7 +263,8 @@ describe("MarketPlace must deploy and work correctly", async () => {
         await MMLtoken.connect(addr2).approve(marketPlaceAddress, 10000000000000000000000000000000000n);
         await MMLtoken.connect(addr3).approve(marketPlaceAddress, 10000000000000000000000000000000000n);
         await marketPlace.connect(addr2).buyToken(tokenId, purchaseOption);
-        expect(await marketPlace.connect(addr3).buyToken(tokenId, purchaseOption)).to.be.revertedWith('Item has sold!')
+        const buyingAfterSale = marketPlace.connect(addr3).buyToken(tokenId, purchaseOption)
+        await expect(buyingAfterSale).to.be.revertedWith('Item has sold!')
     })
 
     it("seller of token should be able to cancel the listing: ", async () => {
@@ -293,17 +294,20 @@ describe("MarketPlace must deploy and work correctly", async () => {
         const markeItemId = 1
         const purachaseOption = 0
         await marketPlace.connect(addr1).listToken(tokenId, 200);
-        await marketPlace.buyToken(markeItemId, purachaseOption)
+        const buyWithInvalidOption = marketPlace.buyToken(markeItemId, purachaseOption)
+        await expect(buyWithInvalidOption).to.be.revertedWith('Invalid purchase option')
     })
 
     it("should return all canceled and all items", async () => {
         const [owner, addr1, addr2] = await ethers.getSigners();
-        for (let i = 1; i < 5; i++) {
+        for (let i = 1; i < 3; i++) {
             await marketPlace.connect(addr1).listToken(i, 100);
         }
-        for (let j = 1; j < 3; j++) {
-            await marketPlace.connect(addr1).cancelMarketItem(j);
+        for (let i = 3; i < 5; i++) {
+            await marketPlace.connect(addr2).listToken(i, 150);
         }
+        await marketPlace.connect(addr1).cancelMarketItem(1);
+        await marketPlace.connect(addr2).cancelMarketItem(3);
         const allCanceledItems = await marketPlace.canceldItems()
         const allItems = await marketPlace.allItems();
         console.log("these are canceled items: ", allCanceledItems);
@@ -320,9 +324,13 @@ describe("MarketPlace must deploy and work correctly", async () => {
     })
 
     it("should return the sold Items", async () => {
-        const [owner, addr1, addr2] = await ethers.getSigners();
-        await marketPlace.connect(addr1).listToken(1, 100);
-        await marketPlace.connect(addr1).listToken(2, 100);
+        const [owner, addr1, addr2, addr3] = await ethers.getSigners();
+        for (let i = 1; i < 3; i++) {
+            await marketPlace.connect(addr1).listToken(i, 100);
+        }
+        for (let i = 3; i < 5; i++) {
+            await marketPlace.connect(addr2).listToken(i, 150);
+        }
         await MMLtoken.connect(addr2).approve(marketPlaceAddress, 10000000000000000000000000000000000n);
         await marketPlace.connect(addr2).buyToken(1, 1);
         const allSoldItems = await marketPlace.soldItems();
@@ -465,18 +473,19 @@ describe.only("Deploy itemsMarketplace ant call its functions", async () => {
         await USDTtoken.mint(addr3.address);
         await MMLtoken.mint(addr2.address);
         await MMLtoken.mint(addr3.address);
-        for (let i = 1; i < 3; i++) {
-            await mirroraVillageItems.connect(owner).mintItem(addr2.address, 100, "Hammer")
-            await mirroraVillageItems.connect(addr2).setApprovalForAll(itemsMarketplaceAddress, true)
-        }
-        // for (let j = 3; j < 5; j++) {
-        //     await mirroraVillageItems.connect(owner).mintItem(addr3.address, 300, "Tractor")
-        // }
-        // await landContract.connect(owner).mintLandToken(1, 1, [22, 33], 400, addr1, "testURI.com");
+        await MMLtoken.mint(addr1.address);
+
+        await mirroraVillageItems.connect(owner).mintItem(addr2.address, 100, "Hammer")
+        await mirroraVillageItems.connect(owner).mintItem(addr3.address, 100, "Tractor")
+        await mirroraVillageItems.connect(addr2).setApprovalForAll(itemsMarketplaceAddress, true)
+        await mirroraVillageItems.connect(addr3).setApprovalForAll(itemsMarketplaceAddress, true)
+
         await USDTtoken.connect(addr2).approve(itemsMarketplaceAddress, 10000000000000000000000000000000000n)
         await MMLtoken.connect(addr2).approve(itemsMarketplaceAddress, 10000000000000000000000000000000000n)
         await MMLtoken.connect(addr3).approve(itemsMarketplaceAddress, 10000000000000000000000000000000000n)
+        await MMLtoken.connect(addr1).approve(itemsMarketplaceAddress, 10000000000000000000000000000000000n)
         await USDTtoken.connect(addr3).approve(itemsMarketplaceAddress, 10000000000000000000000000000000000n)
+
     }
     beforeEach(mintAllTokens)
 
@@ -485,7 +494,7 @@ describe.only("Deploy itemsMarketplace ant call its functions", async () => {
     }
     beforeEach(setNumeratorAndDenominator)
 
-    it.skip("should list an itemId correctly", async () => {
+    it("should list an itemId correctly", async () => {
         const [owner, addr1, addr2] = await ethers.getSigners();
         const tokenId = 1;
         const quantity = 60;
@@ -497,7 +506,7 @@ describe.only("Deploy itemsMarketplace ant call its functions", async () => {
         expect(addr2BalanceOfTokenId).to.equal(40);
     })
 
-    it.skip("should calculate the fee in MML", async () => {
+    it("should calculate the fee in MML", async () => {
         const [owner, addr1, addr2] = await ethers.getSigners();
         const tokenId = 1;
         const quantity = 60;
@@ -507,7 +516,7 @@ describe.only("Deploy itemsMarketplace ant call its functions", async () => {
         console.log(priceAndFee);
     })
 
-    it.skip("should calculate fee in USDT", async () => {
+    it("should calculate fee in USDT", async () => {
         const [owner, addr1, addr2] = await ethers.getSigners();
         const tokenId = 1;
         const quantity = 60;
@@ -528,7 +537,7 @@ describe.only("Deploy itemsMarketplace ant call its functions", async () => {
         expect(priceAndFee[0] + priceAndFee[1]).to.equal(directlyFromUniswap)
     })
 
-    it.skip("should buy an item correctly with MML", async () => {
+    it("should buy an item correctly with MML", async () => {
         const [owner, addr1, addr2, addr3] = await ethers.getSigners();
         const tokenId = 1;
         const quantity = 60;
@@ -555,12 +564,77 @@ describe.only("Deploy itemsMarketplace ant call its functions", async () => {
         const itemBalanceOfaddr3 = await mirroraVillageItems.balanceOf(addr3.address, tokenId);
         const itemBalanceOfContract = await mirroraVillageItems.balanceOf(itemsMarketplaceAddress, tokenId);
         const USDTbalanceOfaddr2 = await USDTtoken.balanceOf(addr2.address);
-        console.log("This is the USDT balance of owner: ", USDTbalanceOfaddr2);
+        const USDTbalanceOfOwner = await USDTtoken.balanceOf(owner.address);
+        console.log("This is the USDT balance of addr2: ", USDTbalanceOfaddr2);
+        console.log("This is the USDT balance of contract owner: ", USDTbalanceOfOwner);
         expect(itemBalanceOfaddr3).to.equal(quantity);
         expect(itemBalanceOfContract).to.equal(0)
     })
 
-    it
+    it("owner of marketItem should be able to cancel the item", async () => {
+        const [owner, addr1, addr2, addr3] = await ethers.getSigners();
+        const tokenId = [1, 2];
+        const quantity = [40, 50];
+        const price = [200, 150]; //! In Dollors
+        const marketItemId = [1, 2];
+        await itemsMarketplace.connect(addr2).listToken(tokenId[0], quantity[0], price[0]);
+        await itemsMarketplace.connect(addr3).listToken(tokenId[1], quantity[1], price[1]);
+        await itemsMarketplace.connect(addr2).cancelMarketItem(marketItemId[0]);
+        const itemInformation1 = await itemsMarketplace.getMarketItemInfo(marketItemId[0])
+        const itemInformation2 = await itemsMarketplace.getMarketItemInfo(marketItemId[1])
+        const contractItemBalance = await mirroraVillageItems.balanceOf(itemsMarketplaceAddress, 1);
+        const addr2ItemBalance = await mirroraVillageItems.balanceOf(addr2.address, 1);
+        expect(itemInformation1[7]).to.equal(true);
+        expect(contractItemBalance).to.equal(0);
+        expect(addr2ItemBalance).to.equal(100);
+        expect(itemInformation2[7]).to.equal(false)
+        const cancelWithWrongOwner = itemsMarketplace.connect(owner).cancelMarketItem(2);
+        await expect(cancelWithWrongOwner).to.be.revertedWith('You are not the token seller!')
+    })
+
+    it("should get all canceled items information", async () => {
+        const [owner, addr1, addr2, addr3] = await ethers.getSigners();
+        await mirroraVillageItems.connect(owner).mintItem(addr2.address, 300, "Axe")
+        await mirroraVillageItems.connect(owner).mintItem(addr2.address, 120, "Combine")
+        await mirroraVillageItems.connect(owner).mintItem(addr3.address, 110, "Panel")
+        await itemsMarketplace.connect(addr2).listToken(3, 90, 200);
+        await itemsMarketplace.connect(addr3).listToken(5, 10, 100);
+        await itemsMarketplace.connect(addr2).listToken(4, 100, 300);
+        await itemsMarketplace.connect(addr2).cancelMarketItem(3);
+        await itemsMarketplace.connect(addr3).cancelMarketItem(2);
+        const canceledItems = await itemsMarketplace.canceldItems();
+        console.log(canceledItems);
+    })
+
+    it("should get all sold items", async () => {
+        const [owner, addr1, addr2, addr3] = await ethers.getSigners();
+        await mirroraVillageItems.connect(owner).mintItem(addr2.address, 300, "Axe")
+        await mirroraVillageItems.connect(owner).mintItem(addr2.address, 120, "Combine")
+        await mirroraVillageItems.connect(owner).mintItem(addr3.address, 110, "Panel")
+        await itemsMarketplace.connect(addr2).listToken(3, 90, 200);
+        await itemsMarketplace.connect(addr3).listToken(5, 10, 100);
+        await itemsMarketplace.connect(addr2).listToken(4, 100, 300);
+        await itemsMarketplace.connect(addr1).buyToken(1, 1);
+        await itemsMarketplace.connect(addr3).buyToken(3, 1);
+        const addr1ItemBalanceToken3 = await mirroraVillageItems.balanceOf(addr1.address, 3);
+        const addr3ItemBalanceToken4 = await mirroraVillageItems.balanceOf(addr3.address, 4);
+        const getSoldItems = await itemsMarketplace.soldItems();
+        console.log(getSoldItems);
+        expect([addr1ItemBalanceToken3, addr3ItemBalanceToken4]).to.have.all.members([90n, 100n])
+    })
+
+    it("should return all marketItems listed by the given address", async () => {
+        const [owner, addr1, addr2, addr3] = await ethers.getSigners();
+        await mirroraVillageItems.connect(owner).mintItem(addr2.address, 300, "Axe")
+        await mirroraVillageItems.connect(owner).mintItem(addr2.address, 120, "Combine")
+        await mirroraVillageItems.connect(owner).mintItem(addr3.address, 110, "Panel")
+        await itemsMarketplace.connect(addr2).listToken(3, 90, 200);
+        await itemsMarketplace.connect(addr3).listToken(5, 10, 100);
+        await itemsMarketplace.connect(addr2).listToken(4, 100, 300);
+        await itemsMarketplace.connect(addr3).listToken(2, 12, 20);
+        const itemsListedByAddress = await itemsMarketplace.allMarketItemsListedByAddress(addr3.address);
+        console.log(itemsListedByAddress);
+    })
 })
 
 
