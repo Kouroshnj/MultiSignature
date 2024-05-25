@@ -74,6 +74,11 @@ contract Marketplace is ReentrancyGuard, UniswapV3Twap {
         _;
     }
 
+    modifier invalidAddress(address _to) {
+        _invalidAddress(_to);
+        _;
+    }
+
     modifier invalidPurchaseOption(PurchaseOptions purchaseOption) {
         _invalidPurchaseOption(purchaseOption);
         _;
@@ -216,7 +221,9 @@ contract Marketplace is ReentrancyGuard, UniswapV3Twap {
         return (marketItemPrice, fee);
     }
 
-    function changeOwner(address _newOwner) external onlyOwner {
+    function changeOwner(
+        address _newOwner
+    ) external onlyOwner invalidAddress(_newOwner) {
         owner = _newOwner;
         emit ChangeOwner(msg.sender, _newOwner);
     }
@@ -352,5 +359,9 @@ contract Marketplace is ReentrancyGuard, UniswapV3Twap {
             MarketItemInfo[_marketItemId].seller != address(0),
             "Invalid seller address!"
         );
+    }
+
+    function _invalidAddress(address _to) private pure {
+        require(_to != address(0), "Invalid zero address!");
     }
 }

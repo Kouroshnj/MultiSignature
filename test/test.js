@@ -234,7 +234,7 @@ describe("MarketPlace must deploy and work correctly", async () => {
         const [owner, addr1, addr2] = await ethers.getSigners();
         const tokenId = 1;
         const quantity = 60;
-        const price = 1; //! In Dollors
+        const price = 1; //! In Dollars
         await marketPlace.connect(addr1).listToken(tokenId, price);
         const priceAndFee = await marketPlace.calculateMMLFeeAndNewPrice(1);
         const directlyFromUniswap = await uniswapV3TwapContract.callEstimateAmountOut(TOKEN_1, 10n ** DECIMALS_1, 10)
@@ -510,7 +510,7 @@ describe.only("Deploy itemsMarketplace ant call its functions", async () => {
         const [owner, addr1, addr2] = await ethers.getSigners();
         const tokenId = 1;
         const quantity = 60;
-        const price = 100; //! In Dollors
+        const price = 100; //! In Dollars
         await itemsMarketplace.connect(addr2).listToken(tokenId, quantity, price);
         const priceAndFee = await itemsMarketplace.calculateMMLFeeAndNewPrice(1);
         console.log(priceAndFee);
@@ -520,7 +520,7 @@ describe.only("Deploy itemsMarketplace ant call its functions", async () => {
         const [owner, addr1, addr2] = await ethers.getSigners();
         const tokenId = 1;
         const quantity = 60;
-        const price = 100; //! In Dollors
+        const price = 100; //! In Dollars
         await itemsMarketplace.connect(addr2).listToken(tokenId, quantity, price);
         const priceAndFee = await itemsMarketplace.calculateUSDTFeeAndNewPrice(1);
         console.log(priceAndFee);
@@ -530,7 +530,7 @@ describe.only("Deploy itemsMarketplace ant call its functions", async () => {
         const [owner, addr1, addr2] = await ethers.getSigners();
         const tokenId = 1;
         const quantity = 60;
-        const price = 1; //! In Dollors
+        const price = 1; //! In Dollars
         await itemsMarketplace.connect(addr2).listToken(tokenId, quantity, price);
         const priceAndFee = await itemsMarketplace.calculateMMLFeeAndNewPrice(1);
         const directlyFromUniswap = await uniswapContract.callEstimateAmountOut(TOKEN_1, 10n ** DECIMALS_1, 10)
@@ -541,7 +541,7 @@ describe.only("Deploy itemsMarketplace ant call its functions", async () => {
         const [owner, addr1, addr2, addr3] = await ethers.getSigners();
         const tokenId = 1;
         const quantity = 60;
-        const price = 200; //! In Dollors
+        const price = 200; //! In Dollars
         const marketItemId = 1;
         const purchaseOption = 1
         await itemsMarketplace.connect(addr2).listToken(tokenId, quantity, price);
@@ -556,7 +556,7 @@ describe.only("Deploy itemsMarketplace ant call its functions", async () => {
         const [owner, addr1, addr2, addr3] = await ethers.getSigners();
         const tokenId = 1;
         const quantity = 60;
-        const price = 200; //! In Dollors
+        const price = 200; //! In Dollars
         const marketItemId = 1;
         const purchaseOption = 2;
         await itemsMarketplace.connect(addr2).listToken(tokenId, quantity, price);
@@ -575,7 +575,7 @@ describe.only("Deploy itemsMarketplace ant call its functions", async () => {
         const [owner, addr1, addr2, addr3] = await ethers.getSigners();
         const tokenId = [1, 2];
         const quantity = [40, 50];
-        const price = [200, 150]; //! In Dollors
+        const price = [200, 150]; //! In Dollars
         const marketItemId = [1, 2];
         await itemsMarketplace.connect(addr2).listToken(tokenId[0], quantity[0], price[0]);
         await itemsMarketplace.connect(addr3).listToken(tokenId[1], quantity[1], price[1]);

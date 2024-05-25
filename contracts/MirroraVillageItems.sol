@@ -36,6 +36,11 @@ contract MirroraVillageItems is ERC1155URIStorage {
         _;
     }
 
+    modifier zeroAddress(address _newOwner) {
+        _zeroAddress(_newOwner);
+        _;
+    }
+
     function mintItem(
         address _to,
         uint _quantity,
@@ -80,7 +85,9 @@ contract MirroraVillageItems is ERC1155URIStorage {
         ItemInfo[itemIds].itemName = _newName;
     }
 
-    function changeOwner(address _newOwner) external onlyOwner {
+    function changeOwner(
+        address _newOwner
+    ) external onlyOwner zeroAddress(_newOwner) {
         owner = _newOwner;
         emit ChangeOwner(msg.sender, _newOwner);
     }
@@ -129,5 +136,9 @@ contract MirroraVillageItems is ERC1155URIStorage {
 
     function _invalidItemId(uint16 itemId) private view {
         require(itemId != 0 && itemId <= itemIds, "Invalid itemId!");
+    }
+
+    function _zeroAddress(address _to) private pure {
+        require(_to != address(0), "Invalid address!");
     }
 }
