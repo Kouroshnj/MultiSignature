@@ -8,10 +8,11 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 contract Land is ERC721URIStorage {
     address public owner;
     uint24 private tokenIds;
+    uint16[] enhancementItems;
 
     event MintToken(uint24 toeknId, address signer, address owner);
     event TransferToken(address from, address to, uint24 tokenId);
-    event SetEnhancements(address signer, string[] items);
+    event SetEnhancements(address signer, uint16[] items);
     event ChangeLandLocation(
         address signer,
         uint[2] oldLocations,
@@ -50,7 +51,7 @@ contract Land is ERC721URIStorage {
         uint24 landId;
         uint8 landSize;
         uint[2] landLocation;
-        string[] enhancements;
+        uint16[] enhancements;
         uint landPrice;
     }
 
@@ -78,11 +79,38 @@ contract Land is ERC721URIStorage {
     }
 
     function setEnhancement(
-        string[] memory _items,
+        uint16[] memory _items,
         uint24 _tokenId
     ) external nftOwner(_tokenId) {
         LandInformation[_tokenId].enhancements = _items;
         emit SetEnhancements(msg.sender, _items);
+    }
+
+    function enhancementIndexFinder(
+        uint24 _tokenId,
+        uint16 _removeItem
+    ) public view returns (uint index) {
+        uint16[] memory items = LandInformation[_tokenId].enhancements;
+        uint itemsLength = items.length;
+        for (uint i = 0; i < itemsLength; i++) {
+            if (items[i] == _removeItem) {
+                return i;
+            }
+        }
+    }
+
+    function removeEnhancement(
+        uint24 _tokenId,
+        uint16 _removeItems
+    ) external onlyOwner {
+        enhancementItems = [0];
+        enhancementItems = LandInformation[_tokenId].enhancements;
+        uint index = enhancementIndexFinder(_tokenId, _removeItems);
+        for (uint i = index; i < enhancementItems.length - 1; i++) {
+            enhancementItems[i] = enhancementItems[i + 1];
+        }
+        enhancementItems.pop();
+        LandInformation[_tokenId].enhancements = enhancementItems;
     }
 
     function transferLandToken(

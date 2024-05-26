@@ -2,120 +2,134 @@ const { expect, should } = require("chai")
 const { ethers } = require("hardhat")
 
 
-// describe("deploy contract successfully", () => {
+describe.only("deploy contract successfully", () => {
 
-//     let landContract;
+    let landContract;
 
-//     const deploy = async () => {
-//         const LandContract = await ethers.getContractFactory("Land");
-//         landContract = await LandContract.deploy();
-//     }
-//     beforeEach(deploy)
+    const deploy = async () => {
+        const LandContract = await ethers.getContractFactory("Land");
+        landContract = await LandContract.deploy();
+    }
+    beforeEach(deploy)
 
-//     const mintToken = async () => {
-//         const [signer, addr1] = await ethers.getSigners()
-//         await landContract.mintLandToken(1, 1, [22, 33], 400, addr1, "testURI.com");
-//     }
-//     beforeEach(mintToken)
+    const mintToken = async () => {
+        const [signer, addr1, addr2] = await ethers.getSigners()
+        await landContract.mintLandToken(1, 1, [22, 33], 400, addr1, "testURI.com");
+        await landContract.mintLandToken(2, 5, [12, 36], 250, addr2, "addr2.com");
+    }
+    beforeEach(mintToken)
 
-//     it("owner of contract must be valid", async function () {
-//         const [signer, addr1] = await ethers.getSigners();
-//         let owner = await landContract.owner()
-//         expect(owner).to.equal(signer.address)
-//     })
-
-
-
-//     it("owner of first token must be valid", async () => {
-//         const [signer, addr1] = await ethers.getSigners();
-
-//         let firstTokenOwner = await landContract.ownerOf(1);
-//         expect(firstTokenOwner).to.equal(addr1);
-//         expect(firstTokenOwner).not.equal(signer)
-//     })
-
-//     it("owner of token must set the enhancements", async () => {
-//         const [signer, addr1] = await ethers.getSigners();
-//         await landContract.connect(addr1).setEnhancement(["soil", "axe"], 1);
-//         let tokenData = await landContract.getTokenInfo(1);
-//         expect(tokenData[5]).to.eql(["soil", "axe"]);
-//         expect(tokenData[5]).not.eql(["tractor", "soil"]);
-//     })
-
-//     it("owner of contract can change the nft location parameter", async () => {
-//         const [signer, addr1] = await ethers.getSigners();
-//         await landContract.connect(signer).changeLandLocation(1, [26, 11]);
-//         let tokenData = await landContract.getTokenInfo(1);
-//         const newLocations = [26, 11]
-//         const oldLocations = [22, 33]
-//         expect(tokenData[4]).to.deep.equal(newLocations);
-//         expect(tokenData[4]).not.deep.equal(oldLocations);
-//     })
-
-//     it("owner of contract must change the price of token", async () => {
-//         const [signer, addr1] = await ethers.getSigners();
-//         await landContract.connect(signer).changeLandPrice(1, 900);
-//         let tokenData = await landContract.getTokenInfo(1);
-//         const newPrice = 900
-//         const oldPrice = 400
-//         expect(tokenData[6]).to.equal(newPrice);
-//         expect(tokenData[6]).not.equal(oldPrice);
-//     })
-
-//     it("after approving the new address, it can change the owner of token", async () => {
-//         const [signer, addr1, addr2] = await ethers.getSigners();
-//         const tokenId = 1
-//         await landContract.connect(addr1).approveLandToken(addr2.address, tokenId);
-//         await landContract.connect(addr2).transferLandToken(addr1.address, addr2.address, tokenId)
-//         let tokenData = await landContract.getTokenInfo(1);
-//         expect(tokenData[0]).to.eql(addr2.address)
-//         expect(tokenData[0]).not.eql(addr1.address)
-//     })
-
-//     it("should change the tokenURI of token", async () => {
-//         const [signer, addr1] = await ethers.getSigners();
-//         const tokenId = 1;
-//         const randomURI = "randomURI.com"
-//         const oldURI = await landContract.tokenURI(tokenId)
-//         await landContract.connect(signer).setTokenURI(tokenId, randomURI);
-//         const newURI = await landContract.tokenURI(tokenId)
-//         expect(newURI).not.eql(oldURI)
-//     })
-
-//     it("owner must change the ownership od contract", async () => {
-//         const [signer, addr1] = await ethers.getSigners();
-//         await landContract.connect(signer).changeOwner(addr1.address);
-//         const currentOwner = await landContract.owner();
-//         expect(currentOwner).to.eql(addr1.address)
-//         expect(currentOwner).not.eql(signer.address)
-//     })
-// })
-
-// describe("UniswapV3Twap get price", async () => {
-//     const FACTORY = "0x1F98431c8aD98523631AE4a59f267346ea31F984"
-//     // MANA
-//     const TOKEN_0 = "0x0F5D2fB29fb7d3CFeE444a200298f468908cC942"
-//     const DECIMALS_0 = 18n
-//     // USDT
-//     const TOKEN_1 = "0xdAC17F958D2ee523a2206206994597C13D831ec7"
-//     const DECIMALS_1 = 6n
-//     // 0.3%
-//     const FEE = 3000
-
-//     it("should get the price", async () => {
-//         const UniswapV3Twap = await ethers.getContractFactory("UniswapV3Twap")
-//         const twap = await UniswapV3Twap.deploy(FACTORY, TOKEN_0, TOKEN_1, FEE)
-
-//         const price = await twap.callEstimateAmountOut(TOKEN_1, 10n ** DECIMALS_1, 10)
-//         const price2 = await twap.callEstimateAmountOut(TOKEN_0, 10n ** DECIMALS_0, 10)
-//         const fee2 = await twap.callEstimateAmountOut(TOKEN_1, 400n ** DECIMALS_1, 10)
+    it("owner of contract must be valid", async function () {
+        const [signer, addr1] = await ethers.getSigners();
+        let owner = await landContract.owner()
+        expect(owner).to.equal(signer.address)
+    })
 
 
-//         console.log(`price one is : ${price}`)
-//         console.log(`price two is : ${price2}`)
-//         console.log("price fee is: ", fee2)
-//     })
-// })
+
+    it("owner of first token must be valid", async () => {
+        const [signer, addr1] = await ethers.getSigners();
+
+        let firstTokenOwner = await landContract.ownerOf(1);
+        expect(firstTokenOwner).to.equal(addr1);
+        expect(firstTokenOwner).not.equal(signer)
+    })
+
+    it("owner of token must set the enhancements", async () => {
+        const [signer, addr1] = await ethers.getSigners();
+        await landContract.connect(addr1).setEnhancement([22, 33], 1);
+        let tokenData = await landContract.getTokenInfo(1);
+        // expect(tokenData[5]).to.eql(["soil", "axe"]);
+        // expect(tokenData[5]).not.eql(["tractor", "soil"]);
+    })
+
+    it.only("should remove selected enhancements", async () => {
+        const [signer, addr1, addr2] = await ethers.getSigners();
+        await landContract.connect(addr1).setEnhancement([22, 33, 44, 55], 1);
+        await landContract.connect(addr2).setEnhancement([91, 67, 59, 84], 2);
+        await landContract.connect(signer).removeEnhancement(1, 44)
+        await landContract.connect(signer).removeEnhancement(2, 67)
+        await landContract.connect(signer).removeEnhancement(2, 84)
+        let tokenData1 = await landContract.getTokenInfo(1);
+        let tokenData2 = await landContract.getTokenInfo(2);
+        console.log("Data1: ", tokenData1);
+        console.log("Data2: ", tokenData2);
+    })
+
+    it("owner of contract can change the nft location parameter", async () => {
+        const [signer, addr1] = await ethers.getSigners();
+        await landContract.connect(signer).changeLandLocation(1, [26, 11]);
+        let tokenData = await landContract.getTokenInfo(1);
+        const newLocations = [26, 11]
+        const oldLocations = [22, 33]
+        expect(tokenData[4]).to.deep.equal(newLocations);
+        expect(tokenData[4]).not.deep.equal(oldLocations);
+    })
+
+    it("owner of contract must change the price of token", async () => {
+        const [signer, addr1] = await ethers.getSigners();
+        await landContract.connect(signer).changeLandPrice(1, 900);
+        let tokenData = await landContract.getTokenInfo(1);
+        const newPrice = 900
+        const oldPrice = 400
+        expect(tokenData[6]).to.equal(newPrice);
+        expect(tokenData[6]).not.equal(oldPrice);
+    })
+
+    it("after approving the new address, it can change the owner of token", async () => {
+        const [signer, addr1, addr2] = await ethers.getSigners();
+        const tokenId = 1
+        await landContract.connect(addr1).approveLandToken(addr2.address, tokenId);
+        await landContract.connect(addr2).transferLandToken(addr1.address, addr2.address, tokenId)
+        let tokenData = await landContract.getTokenInfo(1);
+        expect(tokenData[0]).to.eql(addr2.address)
+        expect(tokenData[0]).not.eql(addr1.address)
+    })
+
+    it("should change the tokenURI of token", async () => {
+        const [signer, addr1] = await ethers.getSigners();
+        const tokenId = 1;
+        const randomURI = "randomURI.com"
+        const oldURI = await landContract.tokenURI(tokenId)
+        await landContract.connect(signer).setTokenURI(tokenId, randomURI);
+        const newURI = await landContract.tokenURI(tokenId)
+        expect(newURI).not.eql(oldURI)
+    })
+
+    it("owner must change the ownership od contract", async () => {
+        const [signer, addr1] = await ethers.getSigners();
+        await landContract.connect(signer).changeOwner(addr1.address);
+        const currentOwner = await landContract.owner();
+        expect(currentOwner).to.eql(addr1.address)
+        expect(currentOwner).not.eql(signer.address)
+    })
+})
+
+describe("UniswapV3Twap get price", async () => {
+    const FACTORY = "0x1F98431c8aD98523631AE4a59f267346ea31F984"
+    // MANA
+    const TOKEN_0 = "0x0F5D2fB29fb7d3CFeE444a200298f468908cC942"
+    const DECIMALS_0 = 18n
+    // USDT
+    const TOKEN_1 = "0xdAC17F958D2ee523a2206206994597C13D831ec7"
+    const DECIMALS_1 = 6n
+    // 0.3%
+    const FEE = 3000
+
+    it("should get the price", async () => {
+        const UniswapV3Twap = await ethers.getContractFactory("UniswapV3Twap")
+        const twap = await UniswapV3Twap.deploy(FACTORY, TOKEN_0, TOKEN_1, FEE)
+
+        const price = await twap.callEstimateAmountOut(TOKEN_1, 10n ** DECIMALS_1, 10)
+        const price2 = await twap.callEstimateAmountOut(TOKEN_0, 10n ** DECIMALS_0, 10)
+        const fee2 = await twap.callEstimateAmountOut(TOKEN_1, 400n ** DECIMALS_1, 10)
+
+
+        console.log(`price one is : ${price}`)
+        console.log(`price two is : ${price2}`)
+        console.log("price fee is: ", fee2)
+    })
+})
 
 describe("MarketPlace must deploy and work correctly", async () => {
     let MMLtoken;
@@ -422,7 +436,7 @@ describe("deploy MirroraVilageItems contract and call its functions", async () =
     })
 })
 
-describe.only("Deploy itemsMarketplace ant call its functions", async () => {
+describe("Deploy itemsMarketplace ant call its functions", async () => {
     const FACTORY = "0x1F98431c8aD98523631AE4a59f267346ea31F984"
     // MANA
     const TOKEN_0 = "0x0F5D2fB29fb7d3CFeE444a200298f468908cC942"
