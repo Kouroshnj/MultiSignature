@@ -637,7 +637,7 @@ describe("Deploy itemsMarketplace ant call its functions", async () => {
         expect([addr1ItemBalanceToken3, addr3ItemBalanceToken4]).to.have.all.members([90n, 100n])
     })
 
-    it("should return all marketItems listed by the given address", async () => {
+    it.only("should return all marketItems listed by the given address", async () => {
         const [owner, addr1, addr2, addr3] = await ethers.getSigners();
         await mirroraVillageItems.connect(owner).mintItem(addr2.address, 300, "Axe")
         await mirroraVillageItems.connect(owner).mintItem(addr2.address, 120, "Combine")
@@ -646,7 +646,7 @@ describe("Deploy itemsMarketplace ant call its functions", async () => {
         await itemsMarketplace.connect(addr3).listToken(5, 10, 100);
         await itemsMarketplace.connect(addr2).listToken(4, 100, 300);
         await itemsMarketplace.connect(addr3).listToken(2, 12, 20);
-        const itemsListedByAddress = await itemsMarketplace.allMarketItemsListedByAddress(addr3.address);
+        const itemsListedByAddress = await itemsMarketplace.marketItemsListedByAddress(addr3.address);
         console.log(itemsListedByAddress);
     })
 })

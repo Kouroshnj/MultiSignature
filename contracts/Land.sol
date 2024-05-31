@@ -89,7 +89,7 @@ contract Land is ERC721URIStorage {
     function enhancementIndexFinder(
         uint24 _tokenId,
         uint16 _removeItem
-    ) public view returns (uint index) {
+    ) internal view returns (uint index) {
         uint16[] memory items = LandInformation[_tokenId].enhancements;
         uint itemsLength = items.length;
         for (uint i = 0; i < itemsLength; i++) {
@@ -101,11 +101,11 @@ contract Land is ERC721URIStorage {
 
     function removeEnhancement(
         uint24 _tokenId,
-        uint16 _removeItems
+        uint16 _removeItem
     ) external onlyOwner {
         enhancementItems = [0];
         enhancementItems = LandInformation[_tokenId].enhancements;
-        uint index = enhancementIndexFinder(_tokenId, _removeItems);
+        uint index = enhancementIndexFinder(_tokenId, _removeItem);
         for (uint i = index; i < enhancementItems.length - 1; i++) {
             enhancementItems[i] = enhancementItems[i + 1];
         }
