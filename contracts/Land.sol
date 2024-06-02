@@ -113,6 +113,13 @@ contract Land is ERC721URIStorage {
         LandInformation[_tokenId].enhancements = enhancementItems;
     }
 
+    function changeItemOwner(
+        uint24 _tokenId,
+        address payable _newOwner
+    ) external onlyOwner invalidTokenId(_tokenId) {
+        LandInformation[_tokenId].owner = _newOwner;
+    }
+
     function transferLandToken(
         address payable _from,
         address payable _to,
