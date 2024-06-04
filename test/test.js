@@ -2,7 +2,7 @@ const { expect, should } = require("chai")
 const { ethers } = require("hardhat")
 
 
-describe.only("deploy contract successfully", () => {
+describe("deploy contract successfully", () => {
 
     let landContract;
 
@@ -26,7 +26,6 @@ describe.only("deploy contract successfully", () => {
     })
 
 
-
     it("owner of first token must be valid", async () => {
         const [signer, addr1] = await ethers.getSigners();
 
@@ -43,7 +42,7 @@ describe.only("deploy contract successfully", () => {
         // expect(tokenData[5]).not.eql(["tractor", "soil"]);
     })
 
-    it.only("should remove selected enhancements", async () => {
+    it("should remove selected enhancements", async () => {
         const [signer, addr1, addr2] = await ethers.getSigners();
         await landContract.connect(addr1).setEnhancement([22, 33, 44, 55], 1);
         await landContract.connect(addr2).setEnhancement([91, 67, 59, 84], 2);
@@ -637,7 +636,7 @@ describe("Deploy itemsMarketplace ant call its functions", async () => {
         expect([addr1ItemBalanceToken3, addr3ItemBalanceToken4]).to.have.all.members([90n, 100n])
     })
 
-    it.only("should return all marketItems listed by the given address", async () => {
+    it("should return all marketItems listed by the given address", async () => {
         const [owner, addr1, addr2, addr3] = await ethers.getSigners();
         await mirroraVillageItems.connect(owner).mintItem(addr2.address, 300, "Axe")
         await mirroraVillageItems.connect(owner).mintItem(addr2.address, 120, "Combine")
@@ -651,6 +650,111 @@ describe("Deploy itemsMarketplace ant call its functions", async () => {
     })
 })
 
+describe.only("Deploy Sneakers contract and test its functions", () => {
+    let sneakersContract;
 
+    const deploy = async () => {
+        const SneakerContract = await ethers.getContractFactory("Sneakers");
+        sneakersContract = await SneakerContract.deploy();
+    }
+    beforeEach(deploy);
 
+    const mintToken = async () => {
+        const [owner, addr1, addr2] = await ethers.getSigners();
+        const type = 1;
+        const quality = 3;
+        const timeToWalk = 20;
+        const speedRange = [1, 7];
+        const maxDist = 100;
+        const reward = 80;
+        const efficiency = 100;
+        const comfort = 20;
+        const resilence = 5;
+        const tokenURI = "test.com"
+        await sneakersContract.mintItem(addr1.address, type, quality, timeToWalk, speedRange, maxDist, reward, efficiency, comfort, resilence, tokenURI);
+        await sneakersContract.mintItem(addr2.address, 2, 2, 30, [2, 10], 200, 50, 120, 345, 180, "test2.com");
+    }
+    beforeEach(mintToken);
 
+    it("should return the tokenInfo of the minted token", async () => {
+        const data = await sneakersContract.getTokenInfo(1);
+        console.log(data);
+    })
+
+    it("should be reveted because invalid quality type", async () => {
+        const [owner, addr1, addr2] = await ethers.getSigners();
+        const invalidMintItem = sneakersContract.mintItem(addr2.address, 1, 0, 20, [2, 10], 200, 10, 480, 600, 320, "test2.com")
+        await expect(invalidMintItem).to.be.revertedWith('Invalid quality!')
+    })
+
+    it("should change the item type", async () => {
+        await sneakersContract.changeItemType(2, 4);
+        const data = await sneakersContract.getTokenInfo(2);
+        expect(data[1]).be.equal(4);
+    })
+
+    it("should change the item timeToWalk", async () => {
+        await sneakersContract.changeItemTimeToWalk(1, 90);
+        const data = await sneakersContract.getTokenInfo(1);
+        expect(data[3]).be.equal(90);
+    })
+
+    it("should change the item owner", async () => {
+        const [owner, addr1, addr2] = await ethers.getSigners();
+        await sneakersContract.changeItemOwner(1, addr2.address);
+        const data = await sneakersContract.getTokenInfo(1);
+        expect(data[0]).to.be.eql(addr2.address)
+    })
+
+    it("should change the item speed range", async () => {
+        await sneakersContract.changeItemSpeedRange(2, [3, 9]);
+        const data = await sneakersContract.getTokenInfo(2);
+        console.log(data[4]);
+    })
+
+    it("should change the item quality", async () => {
+        await sneakersContract.changeItemQuality(1, 3);
+        const data = await sneakersContract.getTokenInfo(1);
+        expect(data[2]).to.be.equal(3);
+    })
+
+    it("should change the item max distination", async () => {
+        await sneakersContract.changeItemMaxDist(1, 2330);
+        const data = await sneakersContract.getTokenInfo(1);
+        expect(data[5]).to.be.equal(2330);
+    })
+
+    it("should change the item reward for hundred AWAT", async () => {
+        await sneakersContract.changeItemReward(2, 18);
+        const data = await sneakersContract.getTokenInfo(2);
+        expect(data[6]).to.be.equal(18);
+    })
+
+    it("should change the item efficiency", async () => {
+        await sneakersContract.changeItemEfficiency(2, 333);
+        const data = await sneakersContract.getTokenInfo(2);
+        expect(data[7]).to.be.equal(333);
+    })
+
+    it("should change the item comfort", async () => {
+        await sneakersContract.changeItemComfort(1, 188);
+        const data = await sneakersContract.getTokenInfo(1);
+        console.log(data);
+        expect(data[8]).to.be.equal(188);
+    })
+
+    it("should change the item resilence", async () => {
+        await sneakersContract.changeItemResilence(1, 999);
+        const data = await sneakersContract.getTokenInfo(1);
+        expect(data[9]).to.be.equal(999);
+    })
+
+    it("should return the number of items owned by given address", async () => {
+        const [owner, addr1, addr2] = await ethers.getSigners();
+        await sneakersContract.mintItem(addr1.address, 2, 2, 20, [5, 12], 500, 12, 360, 560, 780, "test3.com")
+        const data = await sneakersContract.getNumberOfOwnedItemsByAddress(addr2.address);
+        const items = await sneakersContract.getTokenInfoByOwnerAddress(addr2.address, data);
+        console.log(items);
+    })
+
+})
