@@ -356,11 +356,14 @@ contract ItemsMarketplace is ERC1155Holder, ReentrancyGuard, UniswapV3Twap {
     }
 
     function _soldOut(uint192 _marketItemId) private view {
-        require(!MarketItemInfo[_marketItemId].sold, "Item has sold!");
+        require(!MarketItemInfo[_marketItemId].sold, "Item has been sold!");
     }
 
     function _canceled(uint192 _marketItemId) private view {
-        require(!MarketItemInfo[_marketItemId].canceled, "Item has canceled!");
+        require(
+            !MarketItemInfo[_marketItemId].canceled,
+            "Item has been canceled!"
+        );
     }
 
     function _invalidPurchaseOption(

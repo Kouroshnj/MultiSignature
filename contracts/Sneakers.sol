@@ -214,7 +214,7 @@ contract Sneakers is ERC721URIStorage {
     }
 
     function _invalidTokenId(uint24 _tokenId) private view {
-        require(_tokenId <= tokenIds, "invalid tokenId");
+        require(_tokenId <= tokenIds, "Invalid tokenId");
     }
 
     function _invalidQuality(Quality quality) private pure {
