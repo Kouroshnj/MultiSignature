@@ -47,6 +47,7 @@ contract MultiSignature is ReentrancyGuard {
         uint8 yesVotes;
         uint8 allVotesSoFar;
         uint256 neededVotes;
+        bool isTransfered;
         Status status;
     }
 
@@ -102,6 +103,11 @@ contract MultiSignature is ReentrancyGuard {
         _;
     }
 
+    modifier hasTransfered(uint24 _transactionId) {
+        _hasTransfered(_transactionId);
+        _;
+    }
+
     modifier onlyOwner() {
         _onlyOwner();
         _;
@@ -121,6 +127,7 @@ contract MultiSignature is ReentrancyGuard {
         payable
         onlyOwner
         invalidTxStatusId(_transactionId)
+        hasTransfered(_transactionId)
         nonReentrant
     {
         require(
@@ -132,6 +139,7 @@ contract MultiSignature is ReentrancyGuard {
             value: checkTransactionStatus[_transactionId].coinsToTransfer
         }("");
         require(sent, "Native coin transfer failed!");
+        checkTransactionStatus[_transactionId].isTransfered = true;
     }
 
     function helperTransactionStatus(uint24 _transactionId) internal {
@@ -287,26 +295,26 @@ contract MultiSignature is ReentrancyGuard {
                 isValid = true;
             }
         }
-        require(isValid == true, "You are not owner!");
+        require(isValid == true, "Not owner!");
     }
 
     function _existingAddress(address newOwner) private view {
         for (uint i = 1; i < counter + 1; i++) {
-            require(checkOwner[i] != newOwner, "Adding existing address!");
+            require(checkOwner[i] != newOwner, "Existing address!");
         }
     }
 
     function _hasVotedOnOwnerStatus(uint24 ownerStatusId) private view {
         require(
             isVotedInOwnerStatus[ownerStatusId][msg.sender] == false,
-            "You already voted!"
+            "Already voted!"
         );
     }
 
     function _hasVotedOnTxStatus(uint24 _transactionId) private view {
         require(
             isVotedInTransactionStatus[_transactionId][msg.sender] == false,
-            "You already voted!"
+            "Already voted!"
         );
     }
 
@@ -348,5 +356,12 @@ contract MultiSignature is ReentrancyGuard {
 
     function _zeroAmount(uint256 amount) private pure {
         require(amount > 0, "Zero amount!");
+    }
+
+    function _hasTransfered(uint24 transactionId) private view {
+        require(
+            checkTransactionStatus[transactionId].isTransfered == false,
+            "Already transfered!"
+        );
     }
 }
