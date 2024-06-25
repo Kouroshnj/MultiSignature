@@ -125,10 +125,10 @@ contract MultiSignature is ReentrancyGuard {
     )
         external
         payable
+        nonReentrant
         onlyOwner
         invalidTxStatusId(_transactionId)
         hasTransfered(_transactionId)
-        nonReentrant
     {
         require(
             checkTransactionStatus[_transactionId].status == Status.Successful,
