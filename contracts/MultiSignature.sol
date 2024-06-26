@@ -8,6 +8,22 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 contract MultiSignature is ReentrancyGuard {
     using SafeMath for uint256;
 
+    event SetOwnerStatus(address creator, address newOwner);
+    event SetTransactionStatus(
+        address creator,
+        address receiver,
+        uint256 amount
+    );
+    event VotedYesOnOwnerStatus(address voter, uint24 ownerStatusId);
+    event VotedNoOnOwnerStatus(address voter, uint24 ownerStatusId);
+    event VotedYesOnTxStatus(address voter, uint24 transactionId);
+    event VotedNoOnTxStatus(address voter, uint24 transactionId);
+    event TransferCoinsToReceiver(
+        address caller,
+        address receiver,
+        uint256 amount
+    );
+
     uint16 private counter = 1;
     uint8 public lock = 0;
     uint24 private ownerStatusIds = 0;
@@ -140,6 +156,11 @@ contract MultiSignature is ReentrancyGuard {
         }("");
         require(sent, "Native coin transfer failed!");
         checkTransactionStatus[_transactionId].isTransfered = true;
+        emit TransferCoinsToReceiver(
+            msg.sender,
+            receiver,
+            checkTransactionStatus[_transactionId].coinsToTransfer
+        );
     }
 
     function helperTransactionStatus(uint24 _transactionId) internal {
@@ -189,6 +210,7 @@ contract MultiSignature is ReentrancyGuard {
         checkTransactionStatus[transactionIds].coinsReceiver = _receiver;
         checkTransactionStatus[transactionIds].neededVotes = needVotes;
         checkTransactionStatus[transactionIds].status = Status.Pending;
+        emit SetTransactionStatus(msg.sender, _receiver, _amount);
     }
 
     function setOwnerStatus(
@@ -206,6 +228,7 @@ contract MultiSignature is ReentrancyGuard {
         checkAddOwnerStatus[ownerStatusIds].neededVotes = needVotes;
         checkAddOwnerStatus[ownerStatusIds].status = Status.Pending;
         lock = 1;
+        emit SetOwnerStatus(msg.sender, _newOwner);
     }
 
     function voteYesToTxStatus(
@@ -220,6 +243,7 @@ contract MultiSignature is ReentrancyGuard {
         checkTransactionStatus[_transactionId].yesVotes += 1;
         checkTransactionStatus[_transactionId].allVotesSoFar += 1;
         isVotedInTransactionStatus[_transactionId][msg.sender] = true;
+        emit VotedYesOnTxStatus(msg.sender, _transactionId);
         helperTransactionStatus(_transactionId);
     }
 
@@ -235,6 +259,7 @@ contract MultiSignature is ReentrancyGuard {
         checkTransactionStatus[_transactionId].noVotes += 1;
         checkTransactionStatus[_transactionId].allVotesSoFar += 1;
         isVotedInTransactionStatus[_transactionId][msg.sender] = true;
+        emit VotedNoOnTxStatus(msg.sender, _transactionId);
         helperTransactionStatus(_transactionId);
     }
 
@@ -243,13 +268,14 @@ contract MultiSignature is ReentrancyGuard {
     )
         external
         onlyOwner
-        hasOwnerStatusEnded(_ownerStatusId)
         invalidOwnerStatusId(_ownerStatusId)
+        hasOwnerStatusEnded(_ownerStatusId)
         hasVotedOnOwnerStatus(_ownerStatusId)
     {
         checkAddOwnerStatus[_ownerStatusId].yesVotes += 1;
         checkAddOwnerStatus[_ownerStatusId].allVotesSoFar += 1;
         isVotedInOwnerStatus[_ownerStatusId][msg.sender] = true;
+        emit VotedYesOnOwnerStatus(msg.sender, _ownerStatusId);
         helperAddingOwner(_ownerStatusId);
     }
 
@@ -258,13 +284,14 @@ contract MultiSignature is ReentrancyGuard {
     )
         external
         onlyOwner
-        hasOwnerStatusEnded(_ownerStatusId)
         invalidOwnerStatusId(_ownerStatusId)
+        hasOwnerStatusEnded(_ownerStatusId)
         hasVotedOnOwnerStatus(_ownerStatusId)
     {
         checkAddOwnerStatus[_ownerStatusId].noVotes += 1;
         checkAddOwnerStatus[_ownerStatusId].allVotesSoFar += 1;
         isVotedInOwnerStatus[_ownerStatusId][msg.sender] = true;
+        emit VotedNoOnOwnerStatus(msg.sender, _ownerStatusId);
         helperAddingOwner(_ownerStatusId);
     }
 
