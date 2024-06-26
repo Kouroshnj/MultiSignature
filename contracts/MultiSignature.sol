@@ -288,6 +288,16 @@ contract MultiSignature is ReentrancyGuard {
         return checkTransactionStatus[_transactionId];
     }
 
+    function getAllOwners() public view returns (address[] memory) {
+        uint8 k = 0;
+        address[] memory owners = new address[](counter);
+        for (uint i = 1; i < counter + 1; i++) {
+            owners[k] = checkOwner[i];
+            k++;
+        }
+        return owners;
+    }
+
     function _onlyOwner() private view returns (bool isValid) {
         isValid = false;
         for (uint i = 1; i < counter + 1; i++) {
