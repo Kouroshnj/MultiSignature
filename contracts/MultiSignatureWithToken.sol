@@ -142,33 +142,17 @@ contract MultiSignatureWithToken is ReentrancyGuard {
         emit Transfer(msg.sender, address(this), _amount);
     }
 
-    function transferCoinsToReceiver(
-        uint24 _transactionId
-    )
-        external
-        payable
-        nonReentrant
-        onlyOwner
-        invalidTxStatusId(_transactionId)
-        hasTransfered(_transactionId)
-    {
-        require(
-            checkTransactionStatus[_transactionId].status == Status.Successful,
-            "Status was not successful!"
-        );
-        uint256 amount = checkTransactionStatus[_transactionId].coinsToTransfer;
-        address receiver = checkTransactionStatus[_transactionId].coinsReceiver;
-        MMLToken.transfer(receiver, amount);
-        checkTransactionStatus[_transactionId].isTransfered = true;
-    }
-
     function helperTransactionStatus(uint24 _transactionId) internal {
         uint8 allVotes = checkTransactionStatus[_transactionId].allVotesSoFar;
         uint8 allYesVotes = checkTransactionStatus[_transactionId].yesVotes;
         uint8 allNoVotes = checkTransactionStatus[_transactionId].noVotes;
         uint256 needVotes = checkTransactionStatus[_transactionId].neededVotes;
+        address receiver = checkTransactionStatus[_transactionId].coinsReceiver;
+        uint256 amount = checkTransactionStatus[_transactionId].coinsToTransfer;
         if (allYesVotes >= needVotes) {
+            MMLToken.transfer(receiver, amount);
             checkTransactionStatus[_transactionId].status = Status.Successful;
+            checkTransactionStatus[_transactionId].isTransfered = true;
             lock = 0;
         } else if (allNoVotes >= needVotes || allVotes == counter) {
             checkTransactionStatus[_transactionId].status = Status.Failed;
