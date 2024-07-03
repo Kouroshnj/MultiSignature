@@ -998,7 +998,7 @@ describe("Sneakers Marketplace must deploy and work correctly", async () => {
     })
 })
 
-describe.only("MultiSignature contract must deploy and work correctly", () => {
+describe("MultiSignature contract must deploy and work correctly", () => {
     let signatureContract;
     const deploy = async () => {
         const [owner] = await ethers.getSigners();
@@ -1118,7 +1118,120 @@ describe.only("MultiSignature contract must deploy and work correctly", () => {
         await setNewOwners();
         const [owner, addr1, addr2, addr3] = await ethers.getSigners();
         const invalidOwnerStatus = signatureContract.connect(owner).setOwnerStatus(owner.address);
-        await expect(invalidOwnerStatus).to.be.revertedWith('Adding existing address!');
+        await expect(invalidOwnerStatus).to.be.revertedWith('Existing address!');
     })
 
+    it("if coins transfered to the receiver, should not transfer again!", async () => {
+        await setNewOwners();
+        const [owner, addr1, addr2, addr3, addr4] = await ethers.getSigners();
+        const amountToTransfer = 2000000000000; // in WEI
+        await signatureContract.connect(addr1).setTransactionStatus(amountToTransfer, addr4.address);
+        await signatureContract.connect(addr1).voteYesToTxStatus(1);
+        await signatureContract.connect(owner).voteYesToTxStatus(1);
+        await signatureContract.connect(addr1).transferCoinsToReceiver(1);
+        const invalidTransfer = signatureContract.connect(addr1).transferCoinsToReceiver(1);
+        const addr4Balance = await ethers.provider.getBalance(addr4.address);
+        console.log(addr4Balance);
+        await expect(invalidTransfer).to.be.revertedWith("Already transfered!");
+    })
+
+    it("should return all owners", async () => {
+        await setNewOwners();
+        const [owner, addr1] = await ethers.getSigners();
+        const owners = await signatureContract.connect(owner).getAllOwners();
+        console.log(owners);
+    })
+})
+
+describe.only("MultiSignature contract with token instead of native coin", () => {
+    let signatureContract;
+    let MMLtoken;
+    let signatureContractAddress;
+    const deploy = async () => {
+        const [owner] = await ethers.getSigners();
+        const MultiSignatureContract = await ethers.getContractFactory("MultiSignatureWithToken");
+        const MMLtokenContract = await ethers.getContractFactory("MMLtoken")
+        MMLtoken = await MMLtokenContract.deploy();
+        const MMLtokenAddress = await MMLtoken.getAddress();
+        signatureContract = await MultiSignatureContract.deploy(owner.address, MMLtokenAddress);
+        signatureContractAddress = await signatureContract.getAddress();
+        await MMLtoken.connect(owner).approve(signatureContractAddress, 10000000000000000000000000000000000n);
+        await signatureContract.depositToken(6000000000000000000n)
+    }
+    beforeEach(deploy)
+
+    const setSecondOwner = async () => {
+        const [owner, addr1, addr2] = await ethers.getSigners();
+        await signatureContract.connect(owner).setOwnerStatus(addr1.address);
+        await signatureContract.connect(owner).voteYesToAddOwner(1);
+    }
+    beforeEach(setSecondOwner);
+
+    const setNewOwners = async () => {
+        const [owner, addr1, addr2, addr3] = await ethers.getSigners();
+        await signatureContract.connect(owner).setOwnerStatus(addr2.address);
+        await signatureContract.connect(addr1).voteYesToAddOwner(2)
+        await signatureContract.connect(owner).voteYesToAddOwner(2)
+    }
+
+    it("should transfer the tokens after tx status was successful", async () => {
+        await setNewOwners();
+        const [owner, addr1, addr2, addr3, addr4] = await ethers.getSigners();
+        const amountToTransfer = 4000000000000000000n;
+        await signatureContract.connect(addr1).setTransactionStatus(amountToTransfer, addr4.address);
+        await signatureContract.connect(addr1).voteYesToTxStatus(1);
+        await signatureContract.connect(owner).voteYesToTxStatus(1);
+        const contractBalanceBefore = await MMLtoken.balanceOf(signatureContractAddress)
+        await signatureContract.connect(owner).transferCoinsToReceiver(1);
+        const Txdata = await signatureContract.getTxStatusInfo(1);
+        const contractBalanceAfter = await MMLtoken.balanceOf(signatureContractAddress);
+        const addr4Balance = await MMLtoken.balanceOf(addr4.address);
+        console.log(`before is ${contractBalanceBefore}, After is ${contractBalanceAfter} \n`);
+        console.log(`This is addr4 MMl balance: ${addr4Balance}`);
+        console.log(Txdata);
+    })
+
+    it("should revert because zero amount", async () => {
+        const [owner, addr1, addr2] = await ethers.getSigners();
+        const zeroAmount = signatureContract.connect(addr1).setTransactionStatus(0, addr1.address);
+        await expect(zeroAmount).to.be.revertedWith("Zero amount!");
+    })
+
+    it("if a transaction status has failed, should not be able to transfer coin", async () => {
+        await setNewOwners();
+        const [owner, addr1, addr2, addr3] = await ethers.getSigners();
+        await signatureContract.connect(addr2).setTransactionStatus(500000000000000, addr3.address);
+        await signatureContract.connect(addr1).voteNoToTxStatus(1);
+        await signatureContract.connect(owner).voteNoToTxStatus(1)
+        const invalidTransfer = signatureContract.connect(addr2).transferCoinsToReceiver(1)
+        await expect(invalidTransfer).to.be.revertedWith('Status was not successful!');
+    })
+
+    it("should not adding the existing owner", async () => {
+        await setNewOwners();
+        const [owner, addr1, addr2, addr3] = await ethers.getSigners();
+        const invalidOwnerStatus = signatureContract.connect(owner).setOwnerStatus(owner.address);
+        await expect(invalidOwnerStatus).to.be.revertedWith('Existing address!');
+    })
+
+    it("if coins transfered to the receiver, should not transfer again!", async () => {
+        await setNewOwners();
+        const [owner, addr1, addr2, addr3, addr4] = await ethers.getSigners();
+        const amountToTransfer = 5000000000000000000n;
+        await signatureContract.connect(addr1).setTransactionStatus(amountToTransfer, addr4.address);
+        await signatureContract.connect(addr1).voteYesToTxStatus(1);
+        await signatureContract.connect(owner).voteYesToTxStatus(1);
+        await signatureContract.connect(addr1).transferCoinsToReceiver(1);
+        const invalidTransfer = signatureContract.connect(addr1).transferCoinsToReceiver(1);
+        const addr4Balance = await MMLtoken.balanceOf(addr4.address);
+        console.log(addr4Balance);
+        await expect(invalidTransfer).to.be.revertedWith("Already transfered!");
+    })
+
+    it("should return all owners", async () => {
+        await setNewOwners();
+        const [owner, addr1] = await ethers.getSigners();
+        const owners = await signatureContract.connect(owner).getAllOwners();
+        console.log(owners);
+    })
 })

@@ -15,9 +15,4 @@ contract MMLtoken is ERC20 {
         uint amount = 1000e20;
         _mint(to, amount);
     }
-
-    function approve_BUSD(address spender) public {
-        uint amount = 1000e20;
-        _approve(owner, spender, amount);
-    }
 }
