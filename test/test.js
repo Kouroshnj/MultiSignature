@@ -1148,7 +1148,7 @@ describe.only("MultiSignature contract with token instead of native coin", () =>
     let MMLtoken;
     let signatureContractAddress;
     const deploy = async () => {
-        const [owner] = await ethers.getSigners();
+        const [owner, addr1] = await ethers.getSigners();
         const MultiSignatureContract = await ethers.getContractFactory("MultiSignatureWithToken");
         const MMLtokenContract = await ethers.getContractFactory("MMLtoken")
         MMLtoken = await MMLtokenContract.deploy();
@@ -1156,7 +1156,7 @@ describe.only("MultiSignature contract with token instead of native coin", () =>
         signatureContract = await MultiSignatureContract.deploy(owner.address, MMLtokenAddress);
         signatureContractAddress = await signatureContract.getAddress();
         await MMLtoken.connect(owner).approve(signatureContractAddress, 10000000000000000000000000000000000n);
-        await signatureContract.depositToken(6000000000000000000n)
+        await signatureContract.connect(addr1).depositToken(6000000000000000000n)
     }
     beforeEach(deploy)
 
@@ -1174,15 +1174,14 @@ describe.only("MultiSignature contract with token instead of native coin", () =>
         await signatureContract.connect(owner).voteYesToAddOwner(2)
     }
 
-    it("should transfer the tokens after tx status was successful", async () => {
+    it.only("should transfer the tokens after yes votes were valid", async () => {
         await setNewOwners();
         const [owner, addr1, addr2, addr3, addr4] = await ethers.getSigners();
         const amountToTransfer = 4000000000000000000n;
+        const contractBalanceBefore = await MMLtoken.balanceOf(signatureContractAddress)
         await signatureContract.connect(addr1).setTransactionStatus(amountToTransfer, addr4.address);
         await signatureContract.connect(addr1).voteYesToTxStatus(1);
         await signatureContract.connect(owner).voteYesToTxStatus(1);
-        const contractBalanceBefore = await MMLtoken.balanceOf(signatureContractAddress)
-        await signatureContract.connect(owner).transferCoinsToReceiver(1);
         const Txdata = await signatureContract.getTxStatusInfo(1);
         const contractBalanceAfter = await MMLtoken.balanceOf(signatureContractAddress);
         const addr4Balance = await MMLtoken.balanceOf(addr4.address);
