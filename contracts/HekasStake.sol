@@ -79,7 +79,7 @@ contract HekasStake is ReentrancyGuard {
         require(sent, "Failed to desposit!");
     }
 
-    function withdraw(uint256 _amount) external onlyContractOwner {
+    function withdraw(uint256 _amount) public onlyContractOwner {
         require(address(this).balance >= _amount, "Insufficient balance");
         (bool sent, ) = owner.call{value: _amount}("");
         require(sent, "Failed to withdraw!");
@@ -124,7 +124,7 @@ contract HekasStake is ReentrancyGuard {
     function claimReward(
         uint256 _stakeId
     )
-        external
+        public
         invalidStakeId(_stakeId)
         onlyStakeOwner(_stakeId)
         mustBeUngoing(_stakeId)
@@ -150,7 +150,7 @@ contract HekasStake is ReentrancyGuard {
     function unStake(
         uint256 _stakeId
     )
-        external
+        public
         invalidStakeId(_stakeId)
         onlyStakeOwner(_stakeId)
         isAbleToUnStake(_stakeId)
@@ -161,13 +161,11 @@ contract HekasStake is ReentrancyGuard {
         require(sent, "Failed to unstake!");
     }
 
-    function changeRewardRate(
-        uint32 _newRewardRate
-    ) external onlyContractOwner {
+    function changeRewardRate(uint32 _newRewardRate) public onlyContractOwner {
         rewardRate = _newRewardRate;
     }
 
-    function getRewardRate() external view returns (uint256) {
+    function getRewardRate() public view returns (uint256) {
         return rewardRate;
     }
 
@@ -177,17 +175,15 @@ contract HekasStake is ReentrancyGuard {
 
     function getStakeInformation(
         uint256 _stakeId
-    ) external view returns (Stake memory) {
+    ) public view returns (Stake memory) {
         return StakeInformation[_stakeId];
     }
 
-    function getStakeIdReward(
-        uint256 _stakeId
-    ) external view returns (uint256) {
+    function getStakeIdReward(uint256 _stakeId) public view returns (uint256) {
         return StakeReward[_stakeId];
     }
 
-    function getStakeIds() external view returns (uint256) {
+    function getStakeIds() public view returns (uint256) {
         return stakeIds;
     }
 
