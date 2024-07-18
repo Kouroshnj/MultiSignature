@@ -104,11 +104,11 @@ contract HekasStake is ReentrancyGuard {
         uint16 userTL = calculateTL(_lockTime);
         uint16 userTI = calculateRewardInterval(_rewardInterval);
         uint256 currentTime = block.timestamp;
-        uint256 userUpcomingClaim = (_rewardInterval * 1 seconds) + currentTime;
+        uint256 userUpcomingClaim = (_rewardInterval * 1 days) + currentTime;
         StakeInformation[stakeIds].stakeHolder = msg.sender;
         StakeInformation[stakeIds].amountToHold = msg.value;
         StakeInformation[stakeIds].lockTime =
-            (_lockTime * 1 seconds) +
+            (_lockTime * 1 days) +
             currentTime;
         StakeInformation[stakeIds].intervalOfClaim = _rewardInterval;
         StakeInformation[stakeIds].holderTI = userTI;
@@ -139,7 +139,7 @@ contract HekasStake is ReentrancyGuard {
         uint256 userRewardInterval = StakeInformation[_stakeId].intervalOfClaim;
         uint256 userUpcomingClaim = StakeInformation[_stakeId].upcomingClaim;
         StakeInformation[_stakeId].upcomingClaim =
-            (userRewardInterval * 1 seconds) +
+            (userRewardInterval * 1 days) +
             userUpcomingClaim;
         if (StakeInformation[_stakeId].upcomingClaim > userLockTime) {
             StakeInformation[_stakeId].ongoing = false;
