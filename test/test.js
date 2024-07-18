@@ -1143,7 +1143,7 @@ describe("MultiSignature contract must deploy and work correctly", () => {
     })
 })
 
-describe.only("MultiSignature contract with token instead of native coin", () => {
+describe("MultiSignature contract with token instead of native coin", () => {
     let signatureContract;
     let MMLtoken;
     let signatureContractAddress;
@@ -1174,7 +1174,7 @@ describe.only("MultiSignature contract with token instead of native coin", () =>
         await signatureContract.connect(owner).voteYesToAddOwner(2)
     }
 
-    it.only("should transfer the tokens after yes votes were valid", async () => {
+    it("should transfer the tokens after yes votes were valid", async () => {
         await setNewOwners();
         const [owner, addr1, addr2, addr3, addr4] = await ethers.getSigners();
         const amountToTransfer = 4000000000000000000n;
@@ -1232,5 +1232,27 @@ describe.only("MultiSignature contract with token instead of native coin", () =>
         const [owner, addr1] = await ethers.getSigners();
         const owners = await signatureContract.connect(owner).getAllOwners();
         console.log(owners);
+    })
+})
+
+describe.only("testing mirrora stake contract", () => {
+    let stakeContract;
+
+    const deployContract = async () => {
+        const [owner] = await ethers.getSigners();
+        const StakeContract = await ethers.getContractFactory("MirroraStake");
+        stakeContract = await StakeContract.connect(owner).deploy();
+        console.log(stakeContract);
+    }
+
+    beforeEach(deployContract);
+
+    it("user should stake correctly", async () => {
+        const [owner, addr1] = await ethers.getSigners();
+        const amount = 20000000000000000000n
+        const lockTime = 55;
+        const rewardInterval = 10;
+        const msgValue = { value: ethers.parseEther("20") };
+        await stakeContract.connect(addr1).unStake(1);
     })
 })

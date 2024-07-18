@@ -6,6 +6,12 @@ const { API_URL, PRIVATE_KEY, CHAIN_ID, API_KEY } = process.env
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
   defaultNetwork: "localhost",
+  sourcify: {
+    enabled: true
+  },
+  mocha: {
+    timeout: 100000000
+  },
   networks: {
     localhost: {
       url: "http://127.0.0.1:8545"
