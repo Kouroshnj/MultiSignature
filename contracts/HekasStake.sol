@@ -11,6 +11,9 @@ contract HekasStake is ReentrancyGuard {
     mapping(uint256 => Stake) private StakeInformation;
     mapping(uint256 => uint256) private StakeReward;
 
+    event ChangeOwner(address oldOwner, address newOwner);
+    event ChangeRewardRate(address signer, uint32 oldRewardRate);
+
     constructor() {
         owner = msg.sender;
     }
@@ -163,6 +166,7 @@ contract HekasStake is ReentrancyGuard {
 
     function changeRewardRate(uint32 _newRewardRate) public onlyContractOwner {
         rewardRate = _newRewardRate;
+        emit ChangeRewardRate(msg.sender, _newRewardRate);
     }
 
     function getRewardRate() public view returns (uint256) {
@@ -171,6 +175,7 @@ contract HekasStake is ReentrancyGuard {
 
     function changeOwner(address _newOwner) external onlyContractOwner {
         owner = _newOwner;
+        emit ChangeOwner(msg.sender, _newOwner);
     }
 
     function getStakeInformation(

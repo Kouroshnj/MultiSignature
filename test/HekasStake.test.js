@@ -5,7 +5,6 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms))
 }
 
-
 describe("testing mirrora stake contract", () => {
 
     let stakeContract;
@@ -139,7 +138,7 @@ describe("testing mirrora stake contract", () => {
         await expect(invalidUnstake).to.be.revertedWith('Stake is ongoing!')
     })
 
-    it.only("should not revert becuase incoming interval is less than lock time and he can unstake", async () => {
+    it("should not revert becuase incoming interval is less than lock time and he can unstake", async () => {
         let alltakenRewards = 0n
         const [owner, addr1, addr2] = await ethers.getSigners();
         await stakeContract.connect(addr2).deposit({ value: 10000000000000000000n })
@@ -158,6 +157,18 @@ describe("testing mirrora stake contract", () => {
         await stakeContract.connect(addr1).unStake(1);
         const contractBalanceAfter = await ethers.provider.getBalance(stakeContract.getAddress());
         expect(contractBalanceBefore - contractBalanceAfter).to.be.equal((holdAmount[1] + alltakenRewards))
+    })
+
+    it("should revert because invalid stakeId", async () => {
+        const [owner, addr1] = await ethers.getSigners();
+        await setStake();
+        for (let i = 0; i < 2; i++) {
+            console.log("waiting 15 seconds");
+            await sleep(15000)
+            await stakeContract.connect(addr1).claimReward(1);
+        }
+        const invalidStakeId = stakeContract.unStake(2);
+        await expect(invalidStakeId).to.be.revertedWith('Invalid stake id!');
     })
 
 
