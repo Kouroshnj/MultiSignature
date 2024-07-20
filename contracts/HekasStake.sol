@@ -8,7 +8,7 @@ contract HekasStake is ReentrancyGuard {
     uint32 rewardRate = 1300;
     address public owner;
 
-    mapping(uint256 => Stake) private StakeInformation;
+    mapping(uint256 => Stake) public StakeInformation;
     mapping(uint256 => uint256) private StakeReward;
 
     event ChangeOwner(address oldOwner, address newOwner);
@@ -134,20 +134,28 @@ contract HekasStake is ReentrancyGuard {
         isAbleToClaim(_stakeId)
         nonReentrant
     {
+        uint256 currentTime = block.timestamp;
+        uint256 test;
         uint256 reward = StakeReward[_stakeId];
         address stakeOwner = StakeInformation[_stakeId].stakeHolder;
-        uint256 userLockTime = StakeInformation[_stakeId].lockTime;
+        uint256 userLatestClaim = StakeInformation[_stakeId].latestClaim;
+        uint16 userInterval = StakeInformation[_stakeId].intervalOfClaim;
+        if (currentTime >= StakeInformation[_stakeId].lockTime) {
+            test = StakeInformation[_stakeId].lockTime - userLatestClaim;
+            StakeInformation[_stakeId].ongoing = false;
+        } else {
+            test = currentTime - userLatestClaim;
+        }
+        test /= userInterval * 1 days;
+        reward *= test;
         (bool sent, ) = stakeOwner.call{value: reward}("");
         require(sent, "Failed to claim reward!");
-        uint256 userRewardInterval = StakeInformation[_stakeId].intervalOfClaim;
-        uint256 userUpcomingClaim = StakeInformation[_stakeId].upcomingClaim;
+        StakeInformation[_stakeId].latestClaim =
+            (userInterval * 1 days * test) +
+            userLatestClaim;
         StakeInformation[_stakeId].upcomingClaim =
-            (userRewardInterval * 1 days) +
-            userUpcomingClaim;
-        if (StakeInformation[_stakeId].upcomingClaim > userLockTime) {
-            StakeInformation[_stakeId].ongoing = false;
-        }
-        StakeInformation[_stakeId].latestClaim = userUpcomingClaim;
+            (userInterval * 1 days) +
+            StakeInformation[_stakeId].latestClaim;
     }
 
     function unStake(

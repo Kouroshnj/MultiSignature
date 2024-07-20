@@ -19,8 +19,22 @@ describe("testing mirrora stake contract", () => {
     const setStake = async () => {
         const [owner, addr1] = await ethers.getSigners();
         const signers = await ethers.getSigners();
-        await stakeContract.connect(addr1).stake(55, 10, { value: ethers.parseEther("2") });
+        await stakeContract.connect(addr1).stake(30, 10, { value: ethers.parseEther("2") });
     }
+
+    it.only("test claim reward with days intrervals", async () => {
+        const [owner, addr1] = await ethers.getSigners();
+        await setStake();
+        const reward = await stakeContract.getStakeIdReward(1)
+        const dataBefore = await stakeContract.getStakeInformation(1);
+        const beforeClaim = await ethers.provider.getBalance(addr1.address);
+        await stakeContract.connect(addr1).claimReward(1)
+        const afterClaim = await ethers.provider.getBalance(addr1.address);
+        const dataAfter = await stakeContract.getStakeInformation(1);
+        console.log(reward);
+        console.log(dataBefore, dataAfter);
+        console.log(beforeClaim, afterClaim);
+    })
 
     it("user should stake correctly", async () => {
         const [owner, addr1] = await ethers.getSigners();
@@ -79,12 +93,24 @@ describe("testing mirrora stake contract", () => {
     it("stake holder must claim reward", async () => {
         const [owner, addr1] = await ethers.getSigners()
         await setStake()
+        const dataBefore = await stakeContract.getStakeInformation(1)
         const beforeClaim = await ethers.provider.getBalance(addr1.address);
-        console.log("waiting 10 seconds");
-        await sleep(11000)
+        for (let i = 0; i < 2; i++) {
+            console.log("waiting 15 seconds");
+            await sleep(15000)
+        }
         await stakeContract.connect(addr1).claimReward(1);
+        const dataAfterFirst = await stakeContract.getStakeInformation(1)
+        console.log("another 15 seconds");
+        await sleep(15000)
+        await stakeContract.connect(addr1).claimReward(1);
+        const dataAfterSecond = await stakeContract.getStakeInformation(1)
         const afterClaim = await ethers.provider.getBalance(addr1.address);
+        const reward = await stakeContract.getStakeIdReward(1)
+        console.log(`this is reward: ${reward}`)
         console.log(beforeClaim, afterClaim);
+        console.log(dataBefore, dataAfterFirst);
+        console.log(dataAfterSecond);
     })
 
     it("balance must be increased with exact reward amount", async () => {
