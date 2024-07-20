@@ -8,7 +8,7 @@ contract HekasStake is ReentrancyGuard {
     uint32 rewardRate = 1300;
     address public owner;
 
-    mapping(uint256 => Stake) public StakeInformation;
+    mapping(uint256 => Stake) private StakeInformation;
     mapping(uint256 => uint256) private StakeReward;
 
     event ChangeOwner(address oldOwner, address newOwner);
@@ -135,23 +135,23 @@ contract HekasStake is ReentrancyGuard {
         nonReentrant
     {
         uint256 currentTime = block.timestamp;
-        uint256 test;
+        uint256 quantity;
         uint256 reward = StakeReward[_stakeId];
         address stakeOwner = StakeInformation[_stakeId].stakeHolder;
         uint256 userLatestClaim = StakeInformation[_stakeId].latestClaim;
         uint16 userInterval = StakeInformation[_stakeId].intervalOfClaim;
         if (currentTime >= StakeInformation[_stakeId].lockTime) {
-            test = StakeInformation[_stakeId].lockTime - userLatestClaim;
+            quantity = StakeInformation[_stakeId].lockTime - userLatestClaim;
             StakeInformation[_stakeId].ongoing = false;
         } else {
-            test = currentTime - userLatestClaim;
+            quantity = currentTime - userLatestClaim;
         }
-        test /= userInterval * 1 days;
-        reward *= test;
+        quantity /= userInterval * 1 days;
+        reward *= quantity;
         (bool sent, ) = stakeOwner.call{value: reward}("");
         require(sent, "Failed to claim reward!");
         StakeInformation[_stakeId].latestClaim =
-            (userInterval * 1 days * test) +
+            (userInterval * 1 days * quantity) +
             userLatestClaim;
         StakeInformation[_stakeId].upcomingClaim =
             (userInterval * 1 days) +
@@ -190,6 +190,24 @@ contract HekasStake is ReentrancyGuard {
         uint256 _stakeId
     ) public view returns (Stake memory) {
         return StakeInformation[_stakeId];
+    }
+
+    function getStoredRewardsUptoNow(
+        uint256 _stakeId
+    ) public view returns (uint256) {
+        uint reward = StakeReward[_stakeId];
+        uint256 userInterval = StakeInformation[_stakeId].intervalOfClaim;
+        uint256 userLatestClaim = StakeInformation[_stakeId].latestClaim;
+        uint256 quantity = block.timestamp - userLatestClaim;
+        uint256 allRewards = StakeInformation[_stakeId].lockTime -
+            userLatestClaim;
+        quantity /= userInterval;
+        allRewards /= userInterval;
+        if (block.timestamp > StakeInformation[_stakeId].lockTime) {
+            return allRewards * reward;
+        } else {
+            return quantity * reward;
+        }
     }
 
     function getStakeIdReward(uint256 _stakeId) public view returns (uint256) {
