@@ -107,11 +107,11 @@ contract HekasStake is ReentrancyGuard {
         uint16 userTL = calculateTL(_lockTime);
         uint16 userTI = calculateRewardInterval(_rewardInterval);
         uint256 currentTime = block.timestamp;
-        uint256 userUpcomingClaim = (_rewardInterval * 1 days) + currentTime;
+        uint256 userUpcomingClaim = (_rewardInterval * 1 minutes) + currentTime;
         StakeInformation[stakeIds].stakeHolder = msg.sender;
         StakeInformation[stakeIds].amountToHold = msg.value;
         StakeInformation[stakeIds].lockTime =
-            (_lockTime * 1 days) +
+            (_lockTime * 1 minutes) +
             currentTime;
         StakeInformation[stakeIds].intervalOfClaim = _rewardInterval;
         StakeInformation[stakeIds].holderTI = userTI;
@@ -146,15 +146,15 @@ contract HekasStake is ReentrancyGuard {
         } else {
             quantity = currentTime - userLatestClaim;
         }
-        quantity /= userInterval * 1 days;
+        quantity /= userInterval * 1 minutes;
         reward *= quantity;
         (bool sent, ) = stakeOwner.call{value: reward}("");
         require(sent, "Failed to claim reward!");
         StakeInformation[_stakeId].latestClaim =
-            (userInterval * 1 days * quantity) +
+            (userInterval * 1 minutes * quantity) +
             userLatestClaim;
         StakeInformation[_stakeId].upcomingClaim =
-            (userInterval * 1 days) +
+            (userInterval * 1 minutes) +
             StakeInformation[_stakeId].latestClaim;
     }
 
@@ -201,8 +201,8 @@ contract HekasStake is ReentrancyGuard {
         uint256 quantity = block.timestamp - userLatestClaim;
         uint256 allRewards = StakeInformation[_stakeId].lockTime -
             userLatestClaim;
-        quantity /= userInterval * 1 days;
-        allRewards /= userInterval * 1 days;
+        quantity /= userInterval * 1 minutes;
+        allRewards /= userInterval * 1 minutes;
         if (block.timestamp > StakeInformation[_stakeId].lockTime) {
             return allRewards * reward;
         } else {
@@ -311,8 +311,8 @@ contract HekasStake is ReentrancyGuard {
         uint16 userTL = StakeInformation[stakeId].holderTL;
         uint16 userTI = StakeInformation[stakeId].holderTI;
         uint16 interval = StakeInformation[stakeId].intervalOfClaim;
-        uint64 percentagePerDay = (rewardRate + userTA + userTL + userTI);
-        uint256 reward = percentagePerDay * interval * amount;
+        uint64 percentagePerMinute = (rewardRate + userTA + userTL + userTI);
+        uint256 reward = percentagePerMinute * interval * amount;
         reward /= 10 ** 6;
         return reward;
     }

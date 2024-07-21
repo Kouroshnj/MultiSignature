@@ -36,7 +36,7 @@ describe("testing mirrora stake contract", () => {
         console.log(beforeClaim, afterClaim);
     })
 
-    it.only("should return the stored rewards up to now", async () => {
+    it("should return the stored rewards up to now", async () => {
         const [owner, addr1] = await ethers.getSigners();
         await stakeContract.connect(addr1).stake(60, 10, { value: ethers.parseEther("2") });
         const info = await stakeContract.getStakeInformation(1);
