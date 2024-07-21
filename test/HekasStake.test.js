@@ -19,10 +19,10 @@ describe("testing mirrora stake contract", () => {
     const setStake = async () => {
         const [owner, addr1] = await ethers.getSigners();
         const signers = await ethers.getSigners();
-        await stakeContract.connect(addr1).stake(30, 10, { value: ethers.parseEther("2") });
+        await stakeContract.connect(addr1).stake(60, 10, { value: ethers.parseEther("2") });
     }
 
-    it.only("test claim reward with days intrervals", async () => {
+    it("test claim reward with days intrervals", async () => {
         const [owner, addr1] = await ethers.getSigners();
         await setStake();
         const reward = await stakeContract.getStakeIdReward(1)
@@ -34,6 +34,17 @@ describe("testing mirrora stake contract", () => {
         console.log(reward);
         console.log(dataBefore, dataAfter);
         console.log(beforeClaim, afterClaim);
+    })
+
+    it.only("should return the stored rewards up to now", async () => {
+        const [owner, addr1] = await ethers.getSigners();
+        await stakeContract.connect(addr1).stake(60, 10, { value: ethers.parseEther("2") });
+        const info = await stakeContract.getStakeInformation(1);
+        const reward = await stakeContract.getStakeIdReward(1);
+        const data = await stakeContract.getStoredRewardsUptoNow(1);
+        console.log(reward);
+        console.log(info);
+        console.log(data);
     })
 
     it("user should stake correctly", async () => {

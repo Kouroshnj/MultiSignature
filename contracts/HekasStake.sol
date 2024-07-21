@@ -201,8 +201,8 @@ contract HekasStake is ReentrancyGuard {
         uint256 quantity = block.timestamp - userLatestClaim;
         uint256 allRewards = StakeInformation[_stakeId].lockTime -
             userLatestClaim;
-        quantity /= userInterval;
-        allRewards /= userInterval;
+        quantity /= userInterval * 1 days;
+        allRewards /= userInterval * 1 days;
         if (block.timestamp > StakeInformation[_stakeId].lockTime) {
             return allRewards * reward;
         } else {
