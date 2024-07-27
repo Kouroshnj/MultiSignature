@@ -151,15 +151,15 @@ contract LiquNativeStaking is ReentrancyGuard, UniswapV3Twap {
         } else {
             quantity = currentTime - userLatestClaim;
         }
-        quantity /= userInterval * 1 seconds;
+        quantity /= userInterval * 1 minutes;
         reward *= quantity;
         (bool sent, ) = stakeOwner.call{value: reward}("");
         require(sent, "Failed to claim reward!");
         StakeInformation[_stakeId].latestClaim =
-            (userInterval * 1 seconds * quantity) +
+            (userInterval * 1 minutes * quantity) +
             userLatestClaim;
         StakeInformation[_stakeId].upcomingClaim =
-            (userInterval * 1 seconds) +
+            (userInterval * 1 minutes) +
             StakeInformation[_stakeId].latestClaim;
         return reward;
     }
@@ -208,15 +208,16 @@ contract LiquNativeStaking is ReentrancyGuard, UniswapV3Twap {
     function getStoredRewardsUptoNow(
         uint256 _stakeId
     ) public view returns (uint256) {
+        uint256 currentTime = block.timestamp;
         uint reward = StakeReward[_stakeId];
         uint256 userInterval = StakeInformation[_stakeId].intervalOfClaim;
         uint256 userLatestClaim = StakeInformation[_stakeId].latestClaim;
-        uint256 quantity = block.timestamp - userLatestClaim;
+        uint256 quantity = currentTime - userLatestClaim;
         uint256 allRewards = StakeInformation[_stakeId].lockTime -
             userLatestClaim;
-        quantity /= userInterval * 1 seconds;
-        allRewards /= userInterval * 1 seconds;
-        if (block.timestamp > StakeInformation[_stakeId].lockTime) {
+        quantity /= userInterval * 1 minutes;
+        allRewards /= userInterval * 1 minutes;
+        if (currentTime > StakeInformation[_stakeId].lockTime) {
             return allRewards * reward;
         } else {
             return quantity * reward;
@@ -322,11 +323,11 @@ contract LiquNativeStaking is ReentrancyGuard, UniswapV3Twap {
         uint16 _interval
     ) internal {
         uint256 currentTime = block.timestamp;
-        uint256 userUpcomingClaim = (_interval * 1 seconds) + currentTime;
+        uint256 userUpcomingClaim = (_interval * 1 minutes) + currentTime;
         StakeInformation[_stakeId].stakeHolder = msg.sender;
         StakeInformation[_stakeId].amountToHold = _amount;
         StakeInformation[_stakeId].lockTime =
-            (_lockTime * 1 seconds) +
+            (_lockTime * 1 minutes) +
             currentTime;
         StakeInformation[_stakeId].intervalOfClaim = _interval;
         StakeInformation[_stakeId].latestClaim = currentTime;
