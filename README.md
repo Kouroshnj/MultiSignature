@@ -1,2 +1,0 @@
-# MultiSignature
-Multi-Signature 
