@@ -15,10 +15,13 @@ A simple **MultiSignature Wallet** smart contract written in Solidity. This cont
    cd MultiSignature
 
 2. Install dependencies:
+    ```bash
     npm install
 
 3. Compile the contracts:
+    ```bash
     npx hardhat compile
 
 4. Run tests:
+    ```bash
     npx hardhat test
