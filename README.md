@@ -1,18 +1,24 @@
-# Sample Hardhat Project
+# MultiSignature Wallet
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a Hardhat Ignition module that deploys that contract.
+A simple **MultiSignature Wallet** smart contract written in Solidity. This contract allows multiple owners to approve and execute transactions securely.
 
-Try running some of the following tasks:
+## Features
+- Multiple owners can be added.
+- Transactions require a minimum number of approvals before execution.
+- Secure and decentralized decision-making.
 
-# Two differente Marketplaces in this repo : 
-<!-- Land Marketplace -->
-<!-- MirroraVillage Items Marketplace -->
+## Installation
 
-```shell
-npx hardhat help
-npx hardhat test
-REPORT_GAS=true npx hardhat test
-npx hardhat node
-npx hardhat node --fork https://mainnet.infura.io/v3/YOUR-API-KEY
-npx hardhat ignition deploy ./ignition/modules/Lock.js
-```
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/Kouroshnj/MultiSignature.git
+   cd MultiSignature
+
+2. Install dependencies:
+    npm install
+
+3. Compile the contracts:
+    npx hardhat compile
+
+4. Run tests:
+    npx hardhat test
